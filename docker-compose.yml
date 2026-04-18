@@ -1,0 +1,14 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    ports:
+      - '5432:5432'
+  mongodb:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
