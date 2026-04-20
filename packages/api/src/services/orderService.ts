@@ -18,6 +18,7 @@ type VendorOrderSummary = {
 };
 
 type DecimalLike = number | string | { toNumber: () => number };
+type OrderRecordStatus = OrderRecord['status'];
 
 const toNumber = (value: DecimalLike): number => {
   if (typeof value === 'number') {
@@ -27,6 +28,14 @@ const toNumber = (value: DecimalLike): number => {
     return Number(value);
   }
   return value.toNumber();
+};
+
+const toOrderStatus = (status: string): OrderRecordStatus => {
+  const allowedStatuses: OrderRecordStatus[] = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+  if (allowedStatuses.includes(status as OrderRecordStatus)) {
+    return status as OrderRecordStatus;
+  }
+  throw new Error(`Unsupported order status: ${status}`);
 };
 
 const getVendorProfileId = async (userId: string): Promise<string> => {
@@ -57,7 +66,7 @@ const toOrderRecord = (order: {
 }): OrderRecord => ({
   id: order.id,
   customerId: order.customerId,
-  status: order.status as OrderRecord['status'],
+  status: toOrderStatus(order.status),
   totalAmount: toNumber(order.totalAmount),
   createdAt: order.createdAt.toISOString(),
   items: order.items.map((item) => ({
@@ -67,6 +76,13 @@ const toOrderRecord = (order: {
     unitPrice: toNumber(item.unitPrice),
   })),
 });
+
+type VendorOrderWithItems = {
+  id: string;
+  status: string;
+  createdAt: Date;
+  items: Array<{ subtotal: DecimalLike }>;
+};
 
 export const orderService = {
   create: async (customerId: string, items: OrderItemInput[]): Promise<OrderRecord> => {
@@ -149,15 +165,15 @@ export const orderService = {
     });
 
     return orders
-      .map((order: any) => {
-        const amount = order.items.reduce((sum: number, item: any) => sum + toNumber(item.subtotal), 0);
+      .map((order: VendorOrderWithItems) => {
+        const amount = order.items.reduce((sum: number, item: { subtotal: DecimalLike }) => sum + toNumber(item.subtotal), 0);
         if (amount <= 0) {
           return null;
         }
         return {
           orderId: order.id,
           amount,
-          status: order.status as VendorOrderSummary['status'],
+          status: toOrderStatus(order.status),
           createdAt: order.createdAt.toISOString(),
         };
       })

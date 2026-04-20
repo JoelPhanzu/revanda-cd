@@ -56,7 +56,35 @@ const normalizeUser = (user: Partial<User> & { id: string; email: string }): Use
   }
 }
 
-const initialToken = localStorage.getItem('token')
+const storage = {
+  getToken: (): string | null => {
+    if (typeof window === 'undefined') return null
+    try {
+      return window.localStorage.getItem('token')
+    } catch {
+      return null
+    }
+  },
+  setToken: (token: string): void => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem('token', token)
+    } catch {
+      // no-op
+    }
+  },
+  clearAuth: (): void => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.removeItem('token')
+      window.localStorage.removeItem('auth-storage')
+    } catch {
+      // no-op
+    }
+  },
+}
+
+const initialToken = storage.getToken()
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -70,18 +98,17 @@ export const useAuthStore = create<AuthStore>()(
       setUser: (user) => set({ user: normalizeUser(user), isAuthenticated: true }),
 
       setToken: (token: string) => {
-        localStorage.setItem('token', token)
+        storage.setToken(token)
         set({ token, isAuthenticated: true })
       },
 
       setAuthState: (user, token) => {
-        localStorage.setItem('token', token)
+        storage.setToken(token)
         set({ user: normalizeUser(user), token, isAuthenticated: true })
       },
 
       logout: () => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('auth-storage')
+        storage.clearAuth()
         set({ user: null, token: null, isAuthenticated: false })
       },
     }),

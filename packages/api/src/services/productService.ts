@@ -4,8 +4,17 @@ import { prisma } from '../config/prisma';
 type ProductRecord = ProductInput & {
   id: string;
   vendorId: string;
-  validationStatus: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
+  validationStatus: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'DRAFT' | 'ARCHIVED';
   createdAt: string;
+};
+
+const toValidationStatus = (
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'DRAFT' | 'ARCHIVED',
+): ProductRecord['validationStatus'] => {
+  if (status === 'PENDING_APPROVAL' || status === 'APPROVED' || status === 'REJECTED' || status === 'DRAFT' || status === 'ARCHIVED') {
+    return status;
+  }
+  throw new Error(`Unsupported product validation status: ${status}`);
 };
 
 const toProductRecord = (product: {
@@ -26,9 +35,7 @@ const toProductRecord = (product: {
   description: product.description,
   price: typeof product.price === 'number' ? product.price : product.price.toNumber(),
   stock: product.stock,
-  validationStatus: ['PENDING_APPROVAL', 'APPROVED', 'REJECTED'].includes(product.validationStatus)
-    ? (product.validationStatus as ProductRecord['validationStatus'])
-    : 'PENDING_APPROVAL',
+  validationStatus: toValidationStatus(product.validationStatus),
   createdAt: product.createdAt.toISOString(),
 });
 
@@ -119,6 +126,7 @@ export const productService = {
         where: { userId: filters.vendorId },
         select: { id: true },
       });
+      // `vendorId` filter can be provided either as a user id or a vendor profile id.
       vendorFilterId = vendor?.id || filters.vendorId;
     }
 

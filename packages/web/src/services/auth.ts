@@ -6,7 +6,7 @@ export interface LoginInput {
 }
 
 export interface RegisterInput {
-  name: string
+  fullName: string
   email: string
   password: string
   role?: 'CUSTOMER' | 'VENDOR' | 'ADMIN'
@@ -35,7 +35,7 @@ export const authService = {
     apiClient.post('/auth/register', {
       email: data.email,
       password: data.password,
-      fullName: data.name,
+      fullName: data.fullName,
       role: data.role || 'CUSTOMER',
       companyName: data.companyName,
     }),

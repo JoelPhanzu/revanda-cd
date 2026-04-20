@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import { orderService } from '../services/orderService';
 import { AuthRequest } from '../types';
 
-const allowedStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'] as const;
+const allowedStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'] as const;
 
 export const orderController = {
   create: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
