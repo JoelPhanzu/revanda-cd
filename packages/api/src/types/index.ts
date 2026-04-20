@@ -1,6 +1,7 @@
 import { Request } from 'express';
 
 export type Role = 'CUSTOMER' | 'VENDOR' | 'ADMIN';
+// Frontend maps backend uppercase roles to lowercase display roles.
 
 export interface JwtPayload {
   userId: string;

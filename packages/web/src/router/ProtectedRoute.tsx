@@ -3,8 +3,10 @@ import { useAuthStore } from '@/store'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requiredRoles?: Array<'customer' | 'vendor' | 'admin' | 'super_admin'>
+  requiredRoles?: Array<'customer' | 'vendor' | 'admin'>
 }
+
+const normalizeRole = (role?: string) => (role || '').toLowerCase()
 
 export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useAuthStore()
@@ -15,7 +17,7 @@ export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps)
   }
 
   // Si des rôles sont requis et l'utilisateur n'a pas le bon rôle
-  if (requiredRoles && !requiredRoles.includes(user?.role as any)) {
+  if (requiredRoles && !requiredRoles.map(normalizeRole).includes(normalizeRole(user?.displayRole || user?.role))) {
     return <Navigate to="/unauthorized" replace />
   }
 

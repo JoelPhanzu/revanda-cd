@@ -22,7 +22,7 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // Récupérer le token du localStorage
-    const token = localStorage.getItem('authToken')
+    const token = localStorage.getItem('token')
 
     // Ajouter le token au header Authorization
     if (token) {
@@ -47,7 +47,7 @@ apiClient.interceptors.response.use(
     // Gérer les erreurs
     if (error.response?.status === 401) {
       // Token expiré ou non valide
-      localStorage.removeItem('authToken')
+      localStorage.removeItem('token')
       window.location.href = '/login'
     }
 

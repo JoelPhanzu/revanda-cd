@@ -10,7 +10,7 @@ export function RegisterPage() {
   const { addNotification } = useUIStore()
 
   const [formData, setFormData] = useState<RegisterInput>({
-    name: '',
+    fullName: '',
     email: '',
     password: '',
   })
@@ -62,12 +62,12 @@ export function RegisterPage() {
         <h1>Inscription</h1>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="name">Nom complet</label>
+            <label htmlFor="fullName">Nom complet</label>
             <input
-              id="name"
+              id="fullName"
               type="text"
-              name="name"
-              value={formData.name}
+              name="fullName"
+              value={formData.fullName}
               onChange={handleChange}
               placeholder="Jean Dupont"
               required

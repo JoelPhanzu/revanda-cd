@@ -15,19 +15,14 @@ export function Sidebar() {
       { label: 'Mon profil', path: '/profile', icon: '👤' },
       { label: 'Mes commandes', path: '/orders', icon: '📦' },
     ] : []),
-    ...(user?.role === 'vendor' ? [
+    ...(user?.displayRole === 'vendor' ? [
       { label: 'Mes produits', path: '/vendor/products', icon: '🏪' },
       { label: 'Ventes', path: '/vendor/sales', icon: '💰' },
     ] : []),
-    ...(user?.role === 'admin' ? [
+    ...(user?.displayRole === 'admin' ? [
       { label: 'Gestion Admin', path: '/admin', icon: '⚙️' },
       { label: 'Utilisateurs', path: '/admin/users', icon: '👥' },
       { label: 'Produits', path: '/admin/products', icon: '📦' },
-    ] : []),
-    ...(user?.role === 'super_admin' ? [
-      { label: 'Super Admin', path: '/super-admin', icon: '👑' },
-      { label: 'Admins', path: '/super-admin/admins', icon: '🔑' },
-      { label: 'Suppressions', path: '/super-admin/deletions', icon: '🗑️' },
     ] : []),
   ]
 
