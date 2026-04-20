@@ -9,6 +9,13 @@ type OrderRecord = {
   createdAt: string;
 };
 
+type VendorOrderSummary = {
+  orderId: string;
+  amount: number;
+  status: OrderRecord['status'];
+  createdAt: string;
+};
+
 const orders: OrderRecord[] = [];
 
 export const orderService = {
@@ -27,7 +34,7 @@ export const orderService = {
   },
   getById: (id: string): OrderRecord | undefined => orders.find((order) => order.id === id),
   listByCustomer: (customerId: string): OrderRecord[] => orders.filter((order) => order.customerId === customerId),
-  listByVendor: (vendorId: string): Array<{ orderId: string; amount: number; status: OrderRecord['status']; createdAt: string }> =>
+  listByVendor: (vendorId: string): VendorOrderSummary[] =>
     orders
       .map((order) => {
         const amount = order.items
@@ -45,7 +52,25 @@ export const orderService = {
           createdAt: order.createdAt,
         };
       })
-      .filter((entry): entry is { orderId: string; amount: number; status: OrderRecord['status']; createdAt: string } => entry !== null),
+      .filter((entry): entry is VendorOrderSummary => entry !== null),
+  hasVendorInOrder: (orderId: string, vendorId: string): boolean =>
+    orders.some((order) => order.id === orderId && order.items.some((item) => item.vendorId === vendorId)),
+  canViewOrder: (orderId: string, userId: string, role: 'CUSTOMER' | 'VENDOR' | 'ADMIN'): boolean => {
+    if (role === 'ADMIN') {
+      return true;
+    }
+
+    const order = orders.find((entry) => entry.id === orderId);
+    if (!order) {
+      return false;
+    }
+
+    if (role === 'CUSTOMER') {
+      return order.customerId === userId;
+    }
+
+    return order.items.some((item) => item.vendorId === userId);
+  },
   updateStatus: (orderId: string, status: OrderRecord['status']): OrderRecord => {
     const index = orders.findIndex((order) => order.id === orderId);
     if (index < 0) {

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthRequest } from '../types';
 
 type MessageRecord = {
@@ -31,8 +31,21 @@ export const messageController = {
     messages.push(newMessage);
     res.status(201).json(newMessage);
   },
-  history: (req: Request, res: Response): void => {
+  history: (req: AuthRequest, res: Response): void => {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const userId = req.user.userId;
     const result = messages.filter((message) => message.conversationId === req.params.conversationId);
+    const isParticipant = result.some((message) => message.senderId === userId || message.receiverId === userId);
+
+    if (result.length > 0 && !isParticipant) {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
     res.status(200).json(result);
   },
 };

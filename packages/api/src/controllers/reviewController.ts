@@ -19,11 +19,17 @@ export const reviewController = {
       return;
     }
 
+    const rating = Number(req.body.rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      res.status(400).json({ message: 'Rating must be an integer between 1 and 5' });
+      return;
+    }
+
     const review: ReviewRecord = {
       id: `rev_${Date.now()}`,
       productId: req.body.productId,
       customerId: req.user.userId,
-      rating: Number(req.body.rating),
+      rating,
       comment: req.body.comment,
       createdAt: new Date().toISOString(),
     };

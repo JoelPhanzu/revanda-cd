@@ -17,10 +17,24 @@ export const paymentController = {
       return;
     }
 
-    const result = payments.filter((payment) => payment.vendorId === req.user?.userId);
+    const userId = req.user.userId;
+    const result = payments.filter((payment) => payment.vendorId === userId);
     res.status(200).json(result);
   },
   webhook: (req: Request, res: Response): void => {
+    const webhookSecret = process.env.PAYMENT_WEBHOOK_SECRET;
+    const signature = req.header('x-webhook-secret');
+
+    if (!webhookSecret) {
+      res.status(503).json({ message: 'Webhook secret is not configured' });
+      return;
+    }
+
+    if (signature !== webhookSecret) {
+      res.status(401).json({ message: 'Invalid webhook signature' });
+      return;
+    }
+
     const payload = req.body;
     if (payload?.paymentId) {
       const payment = payments.find((item) => item.id === payload.paymentId);
