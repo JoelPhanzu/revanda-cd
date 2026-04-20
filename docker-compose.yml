@@ -1,14 +1,17 @@
-version: '3'
+version: '3.8'
+
 services:
   postgres:
-    image: postgres:13
+    image: postgres:15-alpine
+    container_name: revanda_postgres
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Vodacomtigo10
+      POSTGRES_DB: revandaBD
     ports:
-      - '5432:5432'
-  mongodb:
-    image: mongo:latest
-    ports:
-      - '27017:27017'
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
