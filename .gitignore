@@ -65,9 +65,15 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
+# ============================================
+# ENVIRONMENT VARIABLES (SECRETS)
+# ============================================
+# Ignore ALL .env files EXCEPT .env.example
 .env
-.env.*
+.env.local
+.env.*.local
+.env.development
+.env.production
 !.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -137,3 +143,13 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
