@@ -46,7 +46,7 @@ export const productService = {
   },
   getMyProducts: (vendorId: string): ProductRecord[] => products.filter((product) => product.vendorId === vendorId),
   list: (filters: ProductFilters): ProductRecord[] => {
-    let result = [...products].filter((product) => product.validationStatus === 'APPROVED' || !filters.query);
+    let result = [...products].filter((product) => product.validationStatus === 'APPROVED');
 
     if (filters.vendorId) {
       result = result.filter((product) => product.vendorId === filters.vendorId);

@@ -4,9 +4,7 @@ import { productService } from './productService';
 export const vendorService = {
   getDashboardStats: (vendorId: string) => {
     const products = productService.getMyProducts(vendorId);
-    const sales = orderService
-      .listByCustomer(vendorId)
-      .reduce((sum, order) => sum + order.totalAmount, 0);
+    const sales = orderService.listByVendor(vendorId).reduce((sum, order) => sum + order.amount, 0);
 
     return {
       totalProducts: products.length,
@@ -15,15 +13,6 @@ export const vendorService = {
     };
   },
   getSales: (vendorId: string) => {
-    const orders = orderService
-      .listByCustomer(vendorId)
-      .map((order) => ({
-        orderId: order.id,
-        amount: order.totalAmount,
-        status: order.status,
-        createdAt: order.createdAt,
-      }));
-
-    return orders;
+    return orderService.listByVendor(vendorId);
   },
 };

@@ -17,7 +17,9 @@ type StoredUser = {
 const users: StoredUser[] = [];
 
 const generateToken = (id: string, role: Role): string => {
-  return jwt.sign({ userId: id, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign({ userId: id, role }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
+  });
 };
 
 const register = async (

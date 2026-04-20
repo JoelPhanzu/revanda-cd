@@ -27,6 +27,25 @@ export const orderService = {
   },
   getById: (id: string): OrderRecord | undefined => orders.find((order) => order.id === id),
   listByCustomer: (customerId: string): OrderRecord[] => orders.filter((order) => order.customerId === customerId),
+  listByVendor: (vendorId: string): Array<{ orderId: string; amount: number; status: OrderRecord['status']; createdAt: string }> =>
+    orders
+      .map((order) => {
+        const amount = order.items
+          .filter((item) => item.vendorId === vendorId)
+          .reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+        if (amount <= 0) {
+          return null;
+        }
+
+        return {
+          orderId: order.id,
+          amount,
+          status: order.status,
+          createdAt: order.createdAt,
+        };
+      })
+      .filter((entry): entry is { orderId: string; amount: number; status: OrderRecord['status']; createdAt: string } => entry !== null),
   updateStatus: (orderId: string, status: OrderRecord['status']): OrderRecord => {
     const index = orders.findIndex((order) => order.id === orderId);
     if (index < 0) {
