@@ -70,7 +70,11 @@ productsRouter.get('/', (req, res) => {
     if (categoryId && product.categoryId !== categoryId) return false;
     if (typeof min === 'number' && !Number.isNaN(min) && product.basePrice < min) return false;
     if (typeof max === 'number' && !Number.isNaN(max) && product.basePrice > max) return false;
-    if (searchTerm && !product.name.toLowerCase().includes(searchTerm)) return false;
+    if (
+      searchTerm
+      && !product.name.toLowerCase().includes(searchTerm)
+      && !(product.description?.toLowerCase().includes(searchTerm))
+    ) return false;
     return true;
   });
 
@@ -100,7 +104,7 @@ productsRouter.patch('/:id', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
   }
 
   if (req.authUser?.role === 'VENDOR' && req.authUser.vendorId !== product.vendorId) {
-    res.status(403).json({ message: 'cannot modify another vendor product' });
+    res.status(403).json({ message: "Cannot modify another vendor's product" });
     return;
   }
 
@@ -128,7 +132,7 @@ productsRouter.delete('/:id', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
 
   const product = products[index];
   if (req.authUser?.role === 'VENDOR' && req.authUser.vendorId !== product.vendorId) {
-    res.status(403).json({ message: 'cannot delete another vendor product' });
+    res.status(403).json({ message: "Cannot delete another vendor's product" });
     return;
   }
 

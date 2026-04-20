@@ -31,7 +31,8 @@ ordersRouter.post('/', requireRole(['USER', 'ADMIN']), (req, res) => {
     return;
   }
 
-  const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const totalCents = items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitPrice * 100), 0);
+  const totalAmount = totalCents / 100;
 
   const order: OrderRecord = {
     id: `ord_${orders.length + 1}`,
@@ -58,7 +59,7 @@ ordersRouter.get('/', (req, res) => {
 ordersRouter.get('/vendor/:vendorId', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
   const { vendorId } = req.params;
   if (req.authUser?.role === 'VENDOR' && req.authUser.vendorId !== vendorId) {
-    res.status(403).json({ message: 'cannot list another vendor orders' });
+    res.status(403).json({ message: "Cannot list another vendor's orders" });
     return;
   }
 
@@ -91,6 +92,15 @@ ordersRouter.patch('/:id', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
   if (!order) {
     res.status(404).json({ message: 'order not found' });
     return;
+  }
+
+  if (req.authUser?.role === 'VENDOR') {
+    const vendorId = req.authUser.vendorId;
+    const isVendorParticipant = order.items.some((item) => item.vendorId === vendorId);
+    if (!isVendorParticipant) {
+      res.status(403).json({ message: 'access denied to this order' });
+      return;
+    }
   }
 
   const { status } = req.body as { status?: OrderStatus };

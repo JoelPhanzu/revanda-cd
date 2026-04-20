@@ -6,7 +6,11 @@ const dashboardRouter = Router();
 dashboardRouter.use(authMiddleware);
 
 dashboardRouter.get('/vendor', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
-  const vendorId = req.authUser?.vendorId ?? 'unknown';
+  const vendorId = req.authUser?.vendorId;
+  if (!vendorId) {
+    res.status(400).json({ message: 'vendor context missing' });
+    return;
+  }
 
   res.json({
     vendorId,
@@ -19,7 +23,11 @@ dashboardRouter.get('/vendor', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
 });
 
 dashboardRouter.get('/vendor/analytics', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
-  const vendorId = req.authUser?.vendorId ?? 'unknown';
+  const vendorId = req.authUser?.vendorId;
+  if (!vendorId) {
+    res.status(400).json({ message: 'vendor context missing' });
+    return;
+  }
 
   res.json({
     vendorId,

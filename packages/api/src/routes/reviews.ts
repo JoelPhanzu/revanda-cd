@@ -24,8 +24,16 @@ reviewsRouter.post('/', requireRole(['USER', 'ADMIN']), (req, res) => {
     comment?: string;
   };
 
-  if ((!productId && !vendorId) || typeof rating !== 'number') {
-    res.status(400).json({ message: 'rating and either productId or vendorId are required' });
+  const hasProduct = Boolean(productId);
+  const hasVendor = Boolean(vendorId);
+
+  if (typeof rating !== 'number') {
+    res.status(400).json({ message: 'rating is required' });
+    return;
+  }
+
+  if (hasProduct === hasVendor) {
+    res.status(400).json({ message: 'exactly one of productId or vendorId is required' });
     return;
   }
 

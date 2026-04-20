@@ -30,6 +30,11 @@ paymentsRouter.post('/', requireRole(['USER', 'ADMIN']), (req, res) => {
     return;
   }
 
+  if (amount <= 0) {
+    res.status(400).json({ message: 'amount must be greater than 0' });
+    return;
+  }
+
   const payment: PaymentRecord = {
     id: `pay_${payments.length + 1}`,
     orderId,
@@ -46,7 +51,7 @@ paymentsRouter.post('/', requireRole(['USER', 'ADMIN']), (req, res) => {
 paymentsRouter.get('/vendor/:vendorId', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
   const { vendorId } = req.params;
   if (req.authUser?.role === 'VENDOR' && req.authUser.vendorId !== vendorId) {
-    res.status(403).json({ message: 'cannot list another vendor payments' });
+    res.status(403).json({ message: "Cannot list another vendor's payments" });
     return;
   }
 
@@ -74,6 +79,13 @@ paymentsRouter.patch('/:id', requireRole(['VENDOR', 'ADMIN']), (req, res) => {
   const payment = payments.find((item) => item.id === req.params.id);
   if (!payment) {
     res.status(404).json({ message: 'payment not found' });
+    return;
+  }
+
+  const isAdmin = req.authUser?.role === 'ADMIN';
+  const isVendorOwner = req.authUser?.vendorId === payment.vendorId;
+  if (!isAdmin && !isVendorOwner) {
+    res.status(403).json({ message: 'access denied to this payment' });
     return;
   }
 
