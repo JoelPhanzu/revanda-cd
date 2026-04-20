@@ -1,18 +1,44 @@
-import { orderService } from './orderService';
-import { productService } from './productService';
+import { prisma } from '../config/prisma';
 
 export const vendorService = {
-  getDashboardStats: (vendorId: string) => {
-    const products = productService.getMyProducts(vendorId);
-    const sales = orderService.listByVendor(vendorId).reduce((sum, order) => sum + order.amount, 0);
+  getDashboardStats: async (vendorUserId: string) => {
+    const vendor = await prisma.vendor.findUnique({
+      where: { userId: vendorUserId },
+      select: { id: true },
+    });
+
+    if (!vendor) {
+      throw new Error('Vendor profile not found');
+    }
+
+    const [totalProducts, pendingValidation, salesAggregate] = await Promise.all([
+      prisma.product.count({ where: { vendorId: vendor.id } }),
+      prisma.product.count({ where: { vendorId: vendor.id, validationStatus: 'PENDING_APPROVAL' } }),
+      prisma.payment.aggregate({
+        where: { vendorId: vendor.id, status: 'COMPLETED' },
+        _sum: { amount: true },
+      }),
+    ]);
 
     return {
-      totalProducts: products.length,
-      pendingValidation: products.filter((product) => product.validationStatus === 'PENDING_APPROVAL').length,
-      totalSales: sales,
+      totalProducts,
+      pendingValidation,
+      totalSales: Number(salesAggregate._sum.amount || 0),
     };
   },
-  getSales: (vendorId: string) => {
-    return orderService.listByVendor(vendorId);
+  getSales: async (vendorUserId: string) => {
+    const vendor = await prisma.vendor.findUnique({
+      where: { userId: vendorUserId },
+      select: { id: true },
+    });
+
+    if (!vendor) {
+      throw new Error('Vendor profile not found');
+    }
+
+    return prisma.payment.findMany({
+      where: { vendorId: vendor.id },
+      orderBy: { createdAt: 'desc' },
+    });
   },
 };

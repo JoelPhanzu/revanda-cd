@@ -9,6 +9,8 @@ export interface RegisterInput {
   name: string
   email: string
   password: string
+  role?: 'CUSTOMER' | 'VENDOR' | 'ADMIN'
+  companyName?: string
   phone?: string
 }
 
@@ -30,7 +32,13 @@ export const authService = {
 
   // POST - S'inscrire
   register: (data: RegisterInput) =>
-    apiClient.post('/auth/register', data),
+    apiClient.post('/auth/register', {
+      email: data.email,
+      password: data.password,
+      fullName: data.name,
+      role: data.role || 'CUSTOMER',
+      companyName: data.companyName,
+    }),
 
   // POST - Se déconnecter
   logout: () => {
@@ -45,7 +53,7 @@ export const authService = {
 
   // POST - Rafraîchir le token
   refreshToken: (token: string) =>
-    apiClient.post('/auth/refresh', { token }),
+    apiClient.post('/auth/refresh-token', { token }),
 
   // POST - Demander une réinitialisation de mot de passe
   forgotPassword: (email: string) =>

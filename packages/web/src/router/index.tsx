@@ -71,7 +71,7 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         element: (
-          <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
+          <ProtectedRoute requiredRoles={['admin']}>
             <div>Tableau de bord Admin (À créer)</div>
           </ProtectedRoute>
         ),
@@ -79,7 +79,7 @@ export const router = createBrowserRouter([
       {
         path: 'admin/users',
         element: (
-          <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
+          <ProtectedRoute requiredRoles={['admin']}>
             <div>Gestion Utilisateurs (À créer)</div>
           </ProtectedRoute>
         ),
@@ -87,7 +87,7 @@ export const router = createBrowserRouter([
       {
         path: 'admin/products',
         element: (
-          <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
+          <ProtectedRoute requiredRoles={['admin']}>
             <div>Gestion Produits (À créer)</div>
           </ProtectedRoute>
         ),
@@ -95,7 +95,7 @@ export const router = createBrowserRouter([
       {
         path: 'super-admin',
         element: (
-          <ProtectedRoute requiredRoles={['super_admin']}>
+          <ProtectedRoute requiredRoles={['admin']}>
             <div>Tableau de bord Super Admin (À créer)</div>
           </ProtectedRoute>
         ),
@@ -103,7 +103,7 @@ export const router = createBrowserRouter([
       {
         path: 'super-admin/admins',
         element: (
-          <ProtectedRoute requiredRoles={['super_admin']}>
+          <ProtectedRoute requiredRoles={['admin']}>
             <div>Gestion Admins (À créer)</div>
           </ProtectedRoute>
         ),
@@ -111,7 +111,7 @@ export const router = createBrowserRouter([
       {
         path: 'super-admin/deletions',
         element: (
-          <ProtectedRoute requiredRoles={['super_admin']}>
+          <ProtectedRoute requiredRoles={['admin']}>
             <div>Demandes de Suppression (À créer)</div>
           </ProtectedRoute>
         ),
