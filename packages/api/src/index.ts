@@ -2,35 +2,18 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
+import apiRoutes from './routes';
 
-// Charger les variables d'environnement depuis .env
 dotenv.config();
 
-// Créer l'application Express
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
 
-// ============================================
-// MIDDLEWARES (Préprocesseurs de requêtes)
-// ============================================
-
-// Utiliser helmet pour la sécurité
 app.use(helmet());
-
-// Utiliser CORS pour permettre les requêtes du frontend
 app.use(cors());
-
-// Parser JSON
 app.use(express.json());
-
-// Parser les données de formulaires
 app.use(express.urlencoded({ extended: true }));
 
-// ============================================
-// ROUTES
-// ============================================
-
-// Route de test
 app.get('/', (_req: Request, res: Response) => {
   res.json({
     message: '🚀 Bienvenue sur REVANDA.CD API',
@@ -39,7 +22,6 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
-// Route de health check (vérifier que le serveur fonctionne)
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'OK',
@@ -47,9 +29,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
   });
 });
 
-// ============================================
-// DÉMARRAGE DU SERVEUR
-// ============================================
+app.use('/api', apiRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Serveur REVANDA.CD lancé sur http://localhost:${PORT}`);
