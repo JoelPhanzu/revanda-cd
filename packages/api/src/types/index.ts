@@ -1,5 +1,6 @@
 import { Request } from 'express';
 
+// Frontend maps roles for display: CUSTOMER -> customer, VENDOR -> vendor, ADMIN -> admin
 export type Role = 'CUSTOMER' | 'VENDOR' | 'ADMIN';
 
 export interface JwtPayload {
