@@ -34,8 +34,8 @@ export function Sidebar() {
   return (
     <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-content">
-        <button
-          className="sidebar-close"
+        <button 
+          className="sidebar-close" 
           onClick={() => setSidebarOpen(false)}
         >
           ✕

@@ -1,6 +1,16 @@
 import { prisma } from '../config/prisma';
 import { ProductFilters, ProductInput } from '../types';
 
+type ProductListWhere = {
+  validationStatus: 'APPROVED';
+  vendorId?: string;
+  categoryId?: string;
+  OR?: Array<
+    | { name: { contains: string; mode: 'insensitive' } }
+    | { description: { contains: string; mode: 'insensitive' } }
+  >;
+};
+
 const getVendorIdByUserId = async (userId: string): Promise<string> => {
   const vendor = await prisma.vendor.findUnique({ where: { userId } });
   if (!vendor) {
@@ -55,7 +65,7 @@ export const productService = {
     return prisma.product.findMany({ where: { vendorId }, orderBy: { createdAt: 'desc' } });
   },
   list: async (filters: ProductFilters) => {
-    const where: any = {
+    const where: ProductListWhere = {
       validationStatus: 'APPROVED',
     };
 

@@ -33,6 +33,13 @@ export interface User {
   updatedAt: string
 }
 
+
+type UserInput = Omit<User, 'name' | 'displayRole'> & {
+  name?: string
+  fullName?: string
+  displayRole?: DisplayRole
+}
+
 interface AuthStore {
   // State
   user: User | null
@@ -40,18 +47,18 @@ interface AuthStore {
   isAuthenticated: boolean
 
   // Actions
-  setUser: (user: User) => void
+  setUser: (user: UserInput) => void
   setToken: (token: string) => void
   logout: () => void
-  setAuthState: (user: User, token: string) => void
+  setAuthState: (user: UserInput, token: string) => void
 }
 
 const initialToken = getInitialToken()
 
-const normalizeUser = (user: User): User => ({
+const normalizeUser = (user: UserInput): User => ({
   ...user,
-  name: user.name || (user as any).fullName,
-  displayRole: mapRoleToDisplay(user.role),
+  name: user.name || user.fullName || '',
+  displayRole: user.displayRole || mapRoleToDisplay(user.role),
 })
 
 export const useAuthStore = create<AuthStore>()(
@@ -63,14 +70,14 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: !!initialToken,
 
       // Actions
-      setUser: (user: User) => set({ user: normalizeUser(user), isAuthenticated: true }),
+      setUser: (user: UserInput) => set({ user: normalizeUser(user), isAuthenticated: true }),
 
       setToken: (token: string) => {
         localStorage.setItem('token', token)
         set({ token })
       },
 
-      setAuthState: (user: User, token: string) => {
+      setAuthState: (user: UserInput, token: string) => {
         localStorage.setItem('token', token)
         set({ user: normalizeUser(user), token, isAuthenticated: true })
       },

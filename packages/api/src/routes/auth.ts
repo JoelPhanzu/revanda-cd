@@ -13,6 +13,6 @@ router.post('/register', requireFields('email', 'password'), authController.regi
 router.post('/login', requireFields('email', 'password'), authController.login);
 router.post('/logout', authController.logout);
 router.post('/refresh-token', authenticateJWT, authController.refreshToken);
-router.get('/me', authenticateJWT, authController.getCurrentUser);
+router.get('/me', apiRateLimiter, authenticateJWT, authController.getCurrentUser);
 
 export default router;

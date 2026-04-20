@@ -84,11 +84,16 @@ export const authController = {
         return;
       }
 
-      const { passwordHash: _passwordHash, vendorProfile, ...safeUser } = user;
       res.status(200).json({
-        ...safeUser,
-        name: safeUser.fullName,
-        companyName: vendorProfile?.companyName,
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        name: user.fullName,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        companyName: user.vendorProfile?.companyName,
       });
     } catch (error) {
       next(error);

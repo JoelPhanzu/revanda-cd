@@ -4,7 +4,7 @@ import { OrderItemInput, Role } from '../types';
 type VendorOrderSummary = {
   orderId: string;
   amount: number;
-  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
+  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   createdAt: Date;
 };
 
