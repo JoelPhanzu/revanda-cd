@@ -5,6 +5,11 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ProductsPage } from '@/pages/ProductsPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
+import { AdminDashboardPage } from '@/pages/AdminDashboardPage'
+import { AdminProductsPage } from '@/pages/AdminProductsPage'
+import { AdminVendorsPage } from '@/pages/AdminVendorsPage'
+import { VendorProductsPage } from '@/pages/VendorProductsPage'
+import { VendorSalesPage } from '@/pages/VendorSalesPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { Layout } from '@/layouts/Layout'
 
@@ -65,7 +70,7 @@ export const router = createBrowserRouter([
         path: 'vendor/products',
         element: (
           <ProtectedRoute requiredRoles={['vendor']}>
-            <div>Mes Produits Vendeur (À créer)</div>
+            <VendorProductsPage />
           </ProtectedRoute>
         ),
       },
@@ -73,7 +78,7 @@ export const router = createBrowserRouter([
         path: 'vendor/sales',
         element: (
           <ProtectedRoute requiredRoles={['vendor']}>
-            <div>Ventes Vendeur (À créer)</div>
+            <VendorSalesPage />
           </ProtectedRoute>
         ),
       },
@@ -81,7 +86,15 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: (
           <ProtectedRoute requiredRoles={['admin']}>
-            <div>Tableau de bord Admin (À créer)</div>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/dashboard',
+        element: (
+          <ProtectedRoute requiredRoles={['admin']}>
+            <AdminDashboardPage />
           </ProtectedRoute>
         ),
       },
@@ -97,7 +110,23 @@ export const router = createBrowserRouter([
         path: 'admin/products',
         element: (
           <ProtectedRoute requiredRoles={['admin']}>
-            <div>Gestion Produits (À créer)</div>
+            <AdminProductsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/products/pending',
+        element: (
+          <ProtectedRoute requiredRoles={['admin']}>
+            <AdminProductsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/vendors',
+        element: (
+          <ProtectedRoute requiredRoles={['admin']}>
+            <AdminVendorsPage />
           </ProtectedRoute>
         ),
       },
