@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
@@ -86,7 +86,7 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: (
           <ProtectedRoute requiredRoles={['admin']}>
-            <AdminDashboardPage />
+            <Navigate to="/admin/dashboard" replace />
           </ProtectedRoute>
         ),
       },
@@ -110,7 +110,7 @@ export const router = createBrowserRouter([
         path: 'admin/products',
         element: (
           <ProtectedRoute requiredRoles={['admin']}>
-            <AdminProductsPage />
+            <Navigate to="/admin/products/pending" replace />
           </ProtectedRoute>
         ),
       },

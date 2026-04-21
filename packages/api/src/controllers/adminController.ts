@@ -94,6 +94,7 @@ export const adminController = {
   rejectProduct: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
+      const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
       if (!id) {
         res.status(400).json({ message: 'Missing product id' });
         return;
@@ -104,7 +105,10 @@ export const adminController = {
         data: { validationStatus: 'REJECTED' },
       });
 
-      res.status(200).json({ message: 'Product rejected', product });
+      res.status(200).json({
+        message: reason ? `Product rejected: ${reason}` : 'Product rejected',
+        product,
+      });
     } catch (error) {
       next(error);
     }

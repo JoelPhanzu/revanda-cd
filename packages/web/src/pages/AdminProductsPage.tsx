@@ -31,13 +31,21 @@ export function AdminProductsPage() {
   }, [])
 
   const handleApprove = async (productId: string) => {
-    await apiClient.put(`/products/${productId}/approve`)
-    setProducts((current) => current.filter((product) => product.id !== productId))
+    try {
+      await apiClient.put(`/products/${productId}/approve`)
+      setProducts((current) => current.filter((product) => product.id !== productId))
+    } catch (approveError) {
+      setError(getErrorMessage(approveError))
+    }
   }
 
   const handleReject = async (productId: string, reason: string) => {
-    await apiClient.put(`/products/${productId}/reject`, { reason })
-    setProducts((current) => current.filter((product) => product.id !== productId))
+    try {
+      await apiClient.put(`/products/${productId}/reject`, { reason })
+      setProducts((current) => current.filter((product) => product.id !== productId))
+    } catch (rejectError) {
+      setError(getErrorMessage(rejectError))
+    }
   }
 
   if (isLoading) return <div>Chargement...</div>

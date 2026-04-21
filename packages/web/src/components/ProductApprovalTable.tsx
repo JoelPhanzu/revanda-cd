@@ -48,8 +48,10 @@ export function ProductApprovalTable({ products, onApprove, onReject }: ProductA
                 <button onClick={() => void onApprove(product.id)}>Approuver</button>
                 <button
                   onClick={() => {
-                    const reason = window.prompt('Raison du rejet (optionnel):', '') ?? ''
-                    void onReject(product.id, reason)
+                    const reason = window.prompt('Raison du rejet (optionnel):', '')
+                    if (reason !== null) {
+                      void onReject(product.id, reason)
+                    }
                   }}
                 >
                   Rejeter

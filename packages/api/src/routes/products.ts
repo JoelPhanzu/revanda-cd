@@ -11,8 +11,8 @@ router.post('/', authenticateJWT, requireRole('VENDOR'), productController.creat
 router.put('/:id', authenticateJWT, requireRole('VENDOR'), productController.update);
 router.get('/my-products', authenticateJWT, requireRole('VENDOR'), productController.getMyProducts);
 router.delete('/:id', authenticateJWT, requireRole('VENDOR'), productController.remove);
-router.put('/:id/approve', authenticateJWT, requireRole('ADMIN'), adminController.approveProduct);
-router.put('/:id/reject', authenticateJWT, requireRole('ADMIN'), adminController.rejectProduct);
+router.put('/:id/approve', apiRateLimiter, authenticateJWT, requireRole('ADMIN'), adminController.approveProduct);
+router.put('/:id/reject', apiRateLimiter, authenticateJWT, requireRole('ADMIN'), adminController.rejectProduct);
 router.get('/search', productController.search);
 router.get('/:id', productController.getById);
 router.get('/', productController.list);
