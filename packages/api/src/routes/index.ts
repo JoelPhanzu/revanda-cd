@@ -6,6 +6,7 @@ import paymentRoutes from './payments';
 import vendorRoutes from './vendor';
 import messageRoutes from './messages';
 import reviewRoutes from './reviews';
+import adminRoutes from './admin';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/payments', paymentRoutes);
 router.use('/vendor', vendorRoutes);
 router.use('/messages', messageRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

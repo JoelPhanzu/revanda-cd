@@ -22,9 +22,10 @@ export function Sidebar() {
       { label: 'Ventes', path: '/vendor/sales', icon: '💰' },
     ] : []),
     ...(displayRole === 'admin' ? [
-      { label: 'Gestion Admin', path: '/admin', icon: '⚙️' },
+      { label: 'Dashboard Admin', path: '/admin/dashboard', icon: '⚙️' },
+      { label: 'Validation produits', path: '/admin/products/pending', icon: '✅' },
+      { label: 'Vendeurs', path: '/admin/vendors', icon: '🏪' },
       { label: 'Utilisateurs', path: '/admin/users', icon: '👥' },
-      { label: 'Produits', path: '/admin/products', icon: '📦' },
       { label: 'Super Admin', path: '/super-admin', icon: '👑' },
       { label: 'Admins', path: '/super-admin/admins', icon: '🔑' },
       { label: 'Suppressions', path: '/super-admin/deletions', icon: '🗑️' },
