@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthRequest, JwtPayload, Role } from '../types';
+import { isTokenBlacklisted } from './tokenBlacklist';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -16,6 +17,10 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
   }
 
   const token = authHeader.split(' ')[1];
+  if (isTokenBlacklisted(token)) {
+    res.status(401).json({ message: 'Token has been revoked. Please log in again.' });
+    return;
+  }
 
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { authService } from '../services/auth'
 
 export type BackendRole = 'CUSTOMER' | 'VENDOR' | 'ADMIN'
 export type DisplayRole = 'customer' | 'vendor' | 'admin'
@@ -49,7 +50,7 @@ interface AuthStore {
   // Actions
   setUser: (user: UserInput) => void
   setToken: (token: string) => void
-  logout: () => void
+  logout: () => Promise<void>
   setAuthState: (user: UserInput, token: string) => void
 }
 
@@ -82,7 +83,8 @@ export const useAuthStore = create<AuthStore>()(
         set({ user: normalizeUser(user), token, isAuthenticated: true })
       },
 
-      logout: () => {
+      logout: async () => {
+        await authService.logout()
         localStorage.removeItem('token')
         set({ user: null, token: null, isAuthenticated: false })
       },

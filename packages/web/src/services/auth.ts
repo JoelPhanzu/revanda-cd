@@ -33,10 +33,15 @@ export const authService = {
     apiClient.post('/auth/register', data),
 
   // POST - Se déconnecter
-  logout: () => {
+  logout: async () => {
+    try {
+      await apiClient.post('/auth/logout')
+    } catch (error) {
+      console.warn('Logout API call failed, clearing local auth state anyway', error)
+    }
+
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    return Promise.resolve()
   },
 
   // GET - Récupérer l'utilisateur actuel

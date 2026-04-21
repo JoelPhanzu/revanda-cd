@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { paymentController } from '../controllers/paymentController';
 import { authenticateJWT, requireRole } from '../middleware/auth';
-import { apiRateLimiter } from '../middleware/rateLimit';
+import { paymentsLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
-router.post('/create-intent', apiRateLimiter, authenticateJWT, paymentController.createPaymentIntent);
-router.get('/:paymentIntentId', apiRateLimiter, authenticateJWT, paymentController.getPayment);
-router.get('/', apiRateLimiter, authenticateJWT, requireRole('VENDOR'), paymentController.listPayments);
+router.post('/create-intent', paymentsLimiter, authenticateJWT, paymentController.createPaymentIntent);
+router.get('/:paymentIntentId', paymentsLimiter, authenticateJWT, paymentController.getPayment);
+router.get('/', paymentsLimiter, authenticateJWT, requireRole('VENDOR'), paymentController.listPayments);
 
 export default router;
