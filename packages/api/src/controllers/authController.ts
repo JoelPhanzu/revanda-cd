@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { authService } from '../services/authService';
 import { AuthRequest } from '../types';
 import { prisma } from '../config/prisma';
+import { revokeToken } from '../middleware/tokenBlacklist';
 
 export const authController = {
   registerVendor: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -55,7 +57,22 @@ export const authController = {
       next(error);
     }
   },
-  logout: (_req: Request, res: Response): void => {
+  logout: (req: AuthRequest, res: Response): void => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(400).json({ message: 'No token provided' });
+      return;
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.decode(token) as JwtPayload | null;
+
+    if (!decoded?.exp) {
+      res.status(400).json({ message: 'Invalid token' });
+      return;
+    }
+
+    revokeToken(token, decoded.exp * 1000);
     res.status(200).json({ message: 'Logged out successfully' });
   },
   refreshToken: (req: AuthRequest, res: Response): void => {

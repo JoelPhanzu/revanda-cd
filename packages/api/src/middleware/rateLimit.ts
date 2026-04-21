@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
 const WINDOW_MS = 60_000;
-const MAX_REQUESTS = 100;
 
 type RateBucket = {
   count: number;
@@ -25,25 +24,38 @@ const cleanupExpiredBuckets = (now: number): void => {
   }
 };
 
-export const apiRateLimiter = (req: Request, res: Response, next: NextFunction): void => {
-  const now = Date.now();
-  cleanupExpiredBuckets(now);
-  const key = req.ip || req.socket.remoteAddress || 'unknown';
-  const existing = buckets.get(key);
+const createRateLimiter = (maxRequests: number) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const now = Date.now();
+    cleanupExpiredBuckets(now);
+    const source = req.ip || req.socket.remoteAddress || 'unknown';
+    const key = `${source}:${req.method}:${req.path}`;
+    const existing = buckets.get(key);
 
-  if (!existing || now > existing.resetAt) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+    if (!existing || now > existing.resetAt) {
+      buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+      next();
+      return;
+    }
+
+    if (existing.count >= maxRequests) {
+      const retryAfter = Math.ceil((existing.resetAt - now) / 1000);
+      res.setHeader('Retry-After', retryAfter.toString());
+      res.status(429).json({
+        message: `Too many requests. Try again in ${retryAfter} seconds.`,
+        retryAfter,
+      });
+      return;
+    }
+
+    existing.count += 1;
     next();
-    return;
-  }
-
-  if (existing.count >= MAX_REQUESTS) {
-    const retryAfter = Math.ceil((existing.resetAt - now) / 1000);
-    res.setHeader('Retry-After', retryAfter.toString());
-    res.status(429).json({ message: 'Too many requests' });
-    return;
-  }
-
-  existing.count += 1;
-  next();
+  };
 };
+
+export const apiRateLimiter = createRateLimiter(50);
+export const authLoginLimiter = createRateLimiter(5);
+export const authRegisterLimiter = createRateLimiter(3);
+export const ordersLimiter = createRateLimiter(10);
+export const paymentsLimiter = createRateLimiter(20);
+export const browseLimiter = createRateLimiter(100);
