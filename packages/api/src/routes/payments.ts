@@ -5,8 +5,8 @@ import { paymentsLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
-router.post('/create-intent', authenticateJWT, paymentsLimiter, paymentController.createPaymentIntent);
-router.get('/:paymentIntentId', authenticateJWT, paymentsLimiter, paymentController.getPayment);
-router.get('/', authenticateJWT, paymentsLimiter, requireRole('VENDOR'), paymentController.listPayments);
+router.post('/create-intent', paymentsLimiter, authenticateJWT, paymentController.createPaymentIntent);
+router.get('/:paymentIntentId', paymentsLimiter, authenticateJWT, paymentController.getPayment);
+router.get('/', paymentsLimiter, authenticateJWT, requireRole('VENDOR'), paymentController.listPayments);
 
 export default router;

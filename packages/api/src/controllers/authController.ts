@@ -5,6 +5,12 @@ import { AuthRequest } from '../types';
 import { prisma } from '../config/prisma';
 import { revokeToken } from '../middleware/tokenBlacklist';
 
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required');
+}
+
 export const authController = {
   registerVendor: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -65,15 +71,19 @@ export const authController = {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.decode(token) as JwtPayload | null;
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-    if (!decoded?.exp) {
+      if (!decoded?.exp) {
+        res.status(400).json({ message: 'Invalid token' });
+        return;
+      }
+
+      revokeToken(token, decoded.exp * 1000);
+      res.status(200).json({ message: 'Logged out successfully' });
+    } catch {
       res.status(400).json({ message: 'Invalid token' });
-      return;
     }
-
-    revokeToken(token, decoded.exp * 1000);
-    res.status(200).json({ message: 'Logged out successfully' });
   },
   refreshToken: (req: AuthRequest, res: Response): void => {
     if (!req.user) {

@@ -24,12 +24,22 @@ const cleanupExpiredBuckets = (now: number): void => {
   }
 };
 
+const normalizePath = (path: string): string =>
+  path
+    .replace(/\/\d+(?=\/|$)/g, '/:id')
+    .replace(/\/[0-9a-fA-F]{24}(?=\/|$)/g, '/:id')
+    .replace(/\/[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}(?=\/|$)/g, '/:id');
+
 const createRateLimiter = (maxRequests: number) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const now = Date.now();
     cleanupExpiredBuckets(now);
     const source = req.ip || req.socket.remoteAddress || 'unknown';
-    const key = `${source}:${req.method}:${req.path}`;
+    const endpointPath =
+      typeof req.route?.path === 'string'
+        ? `${req.baseUrl}${req.route.path}`
+        : normalizePath(req.originalUrl.split('?')[0]);
+    const key = `${source}:${req.method}:${endpointPath}`;
     const existing = buckets.get(key);
 
     if (!existing || now > existing.resetAt) {

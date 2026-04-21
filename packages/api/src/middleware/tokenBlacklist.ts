@@ -11,7 +11,7 @@ const cleanupInterval = setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-cleanupInterval.unref?.();
+cleanupInterval.unref();
 
 export const revokeToken = (token: string, expiryTime: number): void => {
   tokenBlacklist.set(token, expiryTime);
