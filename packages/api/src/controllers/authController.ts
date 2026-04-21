@@ -1,6 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { authService } from '../services/authService';
 import { AuthRequest } from '../types';
+import { prisma } from '../config/prisma';
+import { revokeToken } from '../middleware/tokenBlacklist';
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required');
+}
 
 export const authController = {
   registerVendor: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -19,6 +28,33 @@ export const authController = {
       next(error);
     }
   },
+  register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { email, password, role, companyName } = req.body;
+      const fullName = req.body.fullName || req.body.name;
+
+      if (!fullName) {
+        res.status(400).json({ message: 'Missing required fields: fullName' });
+        return;
+      }
+
+      if (role === 'VENDOR') {
+        if (!companyName) {
+          res.status(400).json({ message: 'Missing required fields: companyName' });
+          return;
+        }
+
+        const result = await authService.registerVendor({ email, password, fullName, companyName });
+        res.status(201).json(result);
+        return;
+      }
+
+      const result = await authService.registerCustomer({ email, password, fullName });
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
   login: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await authService.login(req.body);
@@ -27,8 +63,27 @@ export const authController = {
       next(error);
     }
   },
-  logout: (_req: Request, res: Response): void => {
-    res.status(200).json({ message: 'Logged out successfully' });
+  logout: (req: AuthRequest, res: Response): void => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(400).json({ message: 'No token provided' });
+      return;
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+
+      if (!decoded?.exp) {
+        res.status(400).json({ message: 'Invalid token' });
+        return;
+      }
+
+      revokeToken(token, decoded.exp * 1000);
+      res.status(200).json({ message: 'Logged out successfully' });
+    } catch {
+      res.status(400).json({ message: 'Invalid token' });
+    }
   },
   refreshToken: (req: AuthRequest, res: Response): void => {
     if (!req.user) {
@@ -38,5 +93,37 @@ export const authController = {
 
     const token = authService.refreshToken(req.user.userId, req.user.role);
     res.status(200).json({ token });
+  },
+  getCurrentUser: async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user?.userId) {
+        res.status(401).json({ message: 'Not authenticated' });
+        return;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        include: { vendorProfile: true },
+      });
+
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      res.status(200).json({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        name: user.fullName,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        companyName: user.vendorProfile?.companyName,
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 };

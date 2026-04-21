@@ -1,72 +1,105 @@
+import { prisma } from '../config/prisma';
 import { ProductFilters, ProductInput } from '../types';
 
-type ProductRecord = ProductInput & {
-  id: string;
-  vendorId: string;
-  validationStatus: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
+type ProductListWhere = {
+  validationStatus: 'APPROVED';
+  vendorId?: string;
+  categoryId?: string;
+  OR?: Array<
+    | { name: { contains: string; mode: 'insensitive' } }
+    | { description: { contains: string; mode: 'insensitive' } }
+  >;
 };
 
-const products: ProductRecord[] = [];
+const getVendorIdByUserId = async (userId: string): Promise<string> => {
+  const vendor = await prisma.vendor.findUnique({ where: { userId } });
+  if (!vendor) {
+    throw new Error('Vendor profile not found');
+  }
+
+  return vendor.id;
+};
 
 export const productService = {
-  create: (vendorId: string, payload: ProductInput): ProductRecord => {
-    const newProduct: ProductRecord = {
-      id: `prd_${Date.now()}`,
-      vendorId,
-      validationStatus: 'PENDING_APPROVAL',
-      createdAt: new Date().toISOString(),
-      ...payload,
-    };
+  create: async (vendorUserId: string, payload: ProductInput) => {
+    const vendorId = await getVendorIdByUserId(vendorUserId);
 
-    products.push(newProduct);
-    return newProduct;
+    return prisma.product.create({
+      data: {
+        vendorId,
+        categoryId: payload.categoryId,
+        name: payload.name,
+        description: payload.description,
+        price: payload.price,
+        stock: payload.stock,
+      },
+    });
   },
-  update: (vendorId: string, productId: string, payload: Partial<ProductInput>): ProductRecord => {
-    const index = products.findIndex((product) => product.id === productId && product.vendorId === vendorId);
-    if (index < 0) {
+  update: async (vendorUserId: string, productId: string, payload: Partial<ProductInput>) => {
+    const vendorId = await getVendorIdByUserId(vendorUserId);
+
+    const existing = await prisma.product.findFirst({ where: { id: productId, vendorId } });
+    if (!existing) {
       throw new Error('Product not found');
     }
 
-    products[index] = {
-      ...products[index],
-      ...payload,
-      validationStatus: 'PENDING_APPROVAL',
-    };
-
-    return products[index];
+    return prisma.product.update({
+      where: { id: productId },
+      data: {
+        ...payload,
+        validationStatus: 'PENDING_APPROVAL',
+      },
+    });
   },
-  delete: (vendorId: string, productId: string): void => {
-    const index = products.findIndex((product) => product.id === productId && product.vendorId === vendorId);
-    if (index < 0) {
+  delete: async (vendorUserId: string, productId: string): Promise<void> => {
+    const vendorId = await getVendorIdByUserId(vendorUserId);
+    const existing = await prisma.product.findFirst({ where: { id: productId, vendorId } });
+    if (!existing) {
       throw new Error('Product not found');
     }
 
-    products.splice(index, 1);
+    await prisma.product.delete({ where: { id: productId } });
   },
-  getMyProducts: (vendorId: string): ProductRecord[] => products.filter((product) => product.vendorId === vendorId),
-  list: (filters: ProductFilters): ProductRecord[] => {
-    let result = [...products].filter((product) => product.validationStatus === 'APPROVED');
+  getMyProducts: async (vendorUserId: string) => {
+    const vendorId = await getVendorIdByUserId(vendorUserId);
+    return prisma.product.findMany({ where: { vendorId }, orderBy: { createdAt: 'desc' } });
+  },
+  list: async (filters: ProductFilters) => {
+    const where: ProductListWhere = {
+      validationStatus: 'APPROVED',
+    };
 
     if (filters.vendorId) {
-      result = result.filter((product) => product.vendorId === filters.vendorId);
+      where.vendorId = filters.vendorId;
     }
 
     if (filters.categoryId) {
-      result = result.filter((product) => product.categoryId === filters.categoryId);
+      where.categoryId = filters.categoryId;
     }
 
     if (filters.query) {
-      const q = filters.query.toLowerCase();
-      result = result.filter((product) => product.name.toLowerCase().includes(q) || product.description.toLowerCase().includes(q));
+      where.OR = [
+        { name: { contains: filters.query, mode: 'insensitive' } },
+        { description: { contains: filters.query, mode: 'insensitive' } },
+      ];
     }
 
-    if (filters.sortBy === 'arrival') {
-      result.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    }
-
-    return result;
+    return prisma.product.findMany({
+      where,
+      orderBy: filters.sortBy === 'arrival' ? { createdAt: 'desc' } : undefined,
+    });
   },
-  getById: (id: string): ProductRecord | undefined => products.find((product) => product.id === id),
-  search: (query: string): ProductRecord[] => productService.list({ query }),
+  getById: async (id: string) => prisma.product.findUnique({ where: { id } }),
+  search: async (query: string) => {
+    return prisma.product.findMany({
+      where: {
+        validationStatus: 'APPROVED',
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
 };

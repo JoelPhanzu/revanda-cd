@@ -70,7 +70,7 @@ export function DashboardPage() {
           <div className="info-card">
             <p><strong>Nom:</strong> {user?.name}</p>
             <p><strong>Email:</strong> {user?.email}</p>
-            <p><strong>Rôle:</strong> {user?.role}</p>
+            <p><strong>Rôle:</strong> {user?.displayRole}</p>
           </div>
         </section>
 

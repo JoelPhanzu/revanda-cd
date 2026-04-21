@@ -5,7 +5,10 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import routes from './routes';
+import { paymentController } from './controllers/paymentController';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { paymentsLimiter } from './middleware/rateLimit';
+import { checkTokenBlacklist } from './middleware/tokenBlacklist';
 
 
 const app: Express = express();
@@ -13,6 +16,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(cors());
+app.use(checkTokenBlacklist);
+
+app.post('/api/payments/webhook', paymentsLimiter, express.raw({ type: 'application/json' }), paymentController.handleWebhook);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

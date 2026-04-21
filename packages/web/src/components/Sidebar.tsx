@@ -7,6 +7,8 @@ export function Sidebar() {
   const { user, isAuthenticated } = useAuthStore()
   const { sidebarOpen, setSidebarOpen } = useUIStore()
 
+  const displayRole = user?.displayRole
+
   const menuItems = [
     { label: 'Accueil', path: '/', icon: '🏠' },
     { label: 'Produits', path: '/products', icon: '🛍️' },
@@ -15,16 +17,15 @@ export function Sidebar() {
       { label: 'Mon profil', path: '/profile', icon: '👤' },
       { label: 'Mes commandes', path: '/orders', icon: '📦' },
     ] : []),
-    ...(user?.role === 'vendor' ? [
+    ...(displayRole === 'vendor' ? [
       { label: 'Mes produits', path: '/vendor/products', icon: '🏪' },
       { label: 'Ventes', path: '/vendor/sales', icon: '💰' },
     ] : []),
-    ...(user?.role === 'admin' ? [
-      { label: 'Gestion Admin', path: '/admin', icon: '⚙️' },
+    ...(displayRole === 'admin' ? [
+      { label: 'Dashboard Admin', path: '/admin/dashboard', icon: '⚙️' },
+      { label: 'Validation produits', path: '/admin/products/pending', icon: '✅' },
+      { label: 'Vendeurs', path: '/admin/vendors', icon: '🏪' },
       { label: 'Utilisateurs', path: '/admin/users', icon: '👥' },
-      { label: 'Produits', path: '/admin/products', icon: '📦' },
-    ] : []),
-    ...(user?.role === 'super_admin' ? [
       { label: 'Super Admin', path: '/super-admin', icon: '👑' },
       { label: 'Admins', path: '/super-admin/admins', icon: '🔑' },
       { label: 'Suppressions', path: '/super-admin/deletions', icon: '🗑️' },

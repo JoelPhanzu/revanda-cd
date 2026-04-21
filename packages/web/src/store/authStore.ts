@@ -1,14 +1,44 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { authService } from '../services/auth'
+
+export type BackendRole = 'CUSTOMER' | 'VENDOR' | 'ADMIN'
+export type DisplayRole = 'customer' | 'vendor' | 'admin'
+
+export const mapRoleToDisplay = (backendRole: string): DisplayRole => {
+  const mapping: Record<string, DisplayRole> = {
+    CUSTOMER: 'customer',
+    VENDOR: 'vendor',
+    ADMIN: 'admin',
+  }
+
+  return mapping[backendRole] || 'customer'
+}
+
+const getInitialToken = (): string | null => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return localStorage.getItem('token')
+}
 
 export interface User {
   id: string
   name: string
   email: string
-  role: 'customer' | 'vendor' | 'admin' | 'super_admin'
+  role: BackendRole
+  displayRole: DisplayRole
   avatar?: string
   createdAt: string
   updatedAt: string
+}
+
+
+type UserInput = Omit<User, 'name' | 'displayRole'> & {
+  name?: string
+  fullName?: string
+  displayRole?: DisplayRole
 }
 
 interface AuthStore {
@@ -18,30 +48,46 @@ interface AuthStore {
   isAuthenticated: boolean
 
   // Actions
-  setUser: (user: User) => void
+  setUser: (user: UserInput) => void
   setToken: (token: string) => void
-  logout: () => void
-  setAuthState: (user: User, token: string) => void
+  logout: () => Promise<void>
+  setAuthState: (user: UserInput, token: string) => void
 }
+
+const initialToken = getInitialToken()
+
+const normalizeUser = (user: UserInput): User => ({
+  ...user,
+  name: user.name || user.fullName || '',
+  displayRole: user.displayRole || mapRoleToDisplay(user.role),
+})
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       // Initial state
       user: null,
-      token: null,
-      isAuthenticated: false,
+      token: initialToken,
+      isAuthenticated: !!initialToken,
 
       // Actions
-      setUser: (user: User) => set({ user, isAuthenticated: true }),
+      setUser: (user: UserInput) => set({ user: normalizeUser(user), isAuthenticated: true }),
 
-      setToken: (token: string) => set({ token }),
+      setToken: (token: string) => {
+        localStorage.setItem('token', token)
+        set({ token })
+      },
 
-      setAuthState: (user: User, token: string) =>
-        set({ user, token, isAuthenticated: true }),
+      setAuthState: (user: UserInput, token: string) => {
+        localStorage.setItem('token', token)
+        set({ user: normalizeUser(user), token, isAuthenticated: true })
+      },
 
-      logout: () =>
-        set({ user: null, token: null, isAuthenticated: false }),
+      logout: async () => {
+        await authService.logout()
+        localStorage.removeItem('token')
+        set({ user: null, token: null, isAuthenticated: false })
+      },
     }),
     {
       name: 'auth-storage',
