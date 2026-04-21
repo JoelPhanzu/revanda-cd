@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import routes from './routes';
 import { paymentController } from './controllers/paymentController';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { apiRateLimiter } from './middleware/rateLimit';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors());
 
-app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
+app.post('/api/payments/webhook', apiRateLimiter, express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

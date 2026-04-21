@@ -6,8 +6,12 @@ import { useAuthStore } from '@/store/authStore'
 
 type CheckoutOrder = {
   id: string
-  totalAmount: number | string
+  totalAmount: number
   items?: Array<unknown>
+}
+
+type CheckoutOrderResponse = CheckoutOrder & {
+  totalAmount: number | string
 }
 
 export const CheckoutPage = () => {
@@ -32,9 +36,13 @@ export const CheckoutPage = () => {
 
     const fetchOrder = async () => {
       try {
-        const response = await apiClient.get(`/orders/${orderId}`)
-        const data = (response as { data?: CheckoutOrder })?.data ?? (response as unknown as CheckoutOrder)
-        setOrder(data)
+        const response = await apiClient.get<CheckoutOrderResponse>(`/orders/${orderId}`)
+        const data = ((response as { data?: CheckoutOrderResponse }).data ?? response) as CheckoutOrderResponse
+        const totalAmount = Number(data.totalAmount)
+        if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+          throw new Error('Invalid order amount')
+        }
+        setOrder({ ...data, totalAmount })
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load order'
         setError(message)
@@ -58,10 +66,8 @@ export const CheckoutPage = () => {
     return <div>Order not found</div>
   }
 
-  const totalAmount = Number(order.totalAmount)
-
   const handlePaymentSuccess = () => {
-    navigate(`/order/${order.id}/success`)
+    navigate('/dashboard')
   }
 
   const handlePaymentError = (message: string) => {
@@ -83,12 +89,12 @@ export const CheckoutPage = () => {
               <span className="font-medium">Items:</span> {order.items?.length || 0}
             </p>
             <p className="text-lg font-bold">
-              <span className="font-medium">Total:</span> ${totalAmount.toFixed(2)}
+              <span className="font-medium">Total:</span> ${order.totalAmount.toFixed(2)}
             </p>
           </div>
         </div>
 
-        <StripeCheckout orderId={order.id} amount={totalAmount} onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+        <StripeCheckout orderId={order.id} amount={order.totalAmount} onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
       </div>
     </div>
   )

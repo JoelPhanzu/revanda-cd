@@ -80,6 +80,7 @@ export const stripeService = {
         orderId,
         vendorId,
         amount: vendorAmount,
+        // Commission will be computed in a dedicated payout/settlement workflow.
         commissionAmount: 0,
         status: 'PENDING',
         providerRef: paymentIntent.id,

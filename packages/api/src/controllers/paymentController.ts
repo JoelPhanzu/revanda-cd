@@ -35,7 +35,7 @@ export const paymentController = {
         orderId,
         Number(order.totalAmount),
         req.user.userId,
-        order.currency.toLowerCase(),
+        (order.currency?.trim() || 'USD').toLowerCase(),
       );
 
       res.status(200).json({ clientSecret, paymentIntentId });

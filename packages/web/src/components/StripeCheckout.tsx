@@ -8,7 +8,7 @@ import {
 import { type StripeElementsOptions } from '@stripe/stripe-js'
 import { Button } from '@/components/Button'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { stripeService } from '@/services/stripe'
+import { stripePromise, stripeService } from '@/services/stripe'
 
 interface StripeCheckoutProps {
   orderId: string
@@ -42,7 +42,7 @@ const CheckoutForm = ({ amount, onSuccess, onError }: CheckoutFormProps) => {
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/checkout/success`,
+          return_url: `${window.location.origin}/dashboard`,
         },
       })
 
@@ -80,7 +80,7 @@ export const StripeCheckout = ({ orderId, amount, onSuccess, onError }: StripeCh
     const createIntent = async () => {
       setLoadingIntent(true)
       try {
-        const { clientSecret: secret } = await stripeService.createPaymentIntent(orderId, amount)
+        const { clientSecret: secret } = await stripeService.createPaymentIntent(orderId)
         setClientSecret(secret)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unable to initialize payment'
@@ -106,7 +106,7 @@ export const StripeCheckout = ({ orderId, amount, onSuccess, onError }: StripeCh
   }
 
   return (
-    <Elements stripe={stripeService.getStripe()} options={options}>
+    <Elements stripe={stripePromise} options={options}>
       <div className="max-w-md mx-auto p-6 border rounded-lg">
         <h2 className="text-2xl font-bold mb-4">Secure Payment</h2>
         <CheckoutForm amount={amount} onSuccess={onSuccess} onError={onError} />
