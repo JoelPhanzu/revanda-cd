@@ -6,7 +6,8 @@ import { apiRateLimiter } from '../middleware/rateLimit';
 const router = Router();
 router.use(apiRateLimiter);
 
-router.get('/', authenticateJWT, requireRole('VENDOR', 'ADMIN'), paymentController.getMyPayments);
-router.post('/webhook', paymentController.webhook);
+router.post('/create-intent', authenticateJWT, paymentController.createPaymentIntent);
+router.get('/:paymentIntentId', authenticateJWT, paymentController.getPayment);
+router.get('/', authenticateJWT, requireRole('VENDOR'), paymentController.listPayments);
 
 export default router;
