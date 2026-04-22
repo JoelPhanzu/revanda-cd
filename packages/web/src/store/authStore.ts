@@ -30,12 +30,18 @@ export interface User {
   role: BackendRole
   displayRole: DisplayRole
   avatar?: string
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 
-type UserInput = Omit<User, 'name' | 'displayRole'> & {
+type UserInput = {
+  id: string
+  email: string
+  role: BackendRole | string
+  avatar?: string
+  createdAt?: string
+  updatedAt?: string
   name?: string
   fullName?: string
   displayRole?: DisplayRole
@@ -58,6 +64,7 @@ const initialToken = getInitialToken()
 
 const normalizeUser = (user: UserInput): User => ({
   ...user,
+  role: (user.role || 'CUSTOMER') as BackendRole,
   name: user.name || user.fullName || '',
   displayRole: user.displayRole || mapRoleToDisplay(user.role),
 })

@@ -55,10 +55,16 @@ export function Navigation() {
           </button>
           <button
             type="button"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600"
             aria-label="Cart"
+            onClick={() => navigate('/cart')}
           >
-            Cart ({itemCount})
+            🛒 Panier
+            {itemCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                {itemCount > 9 ? '9+' : itemCount}
+              </span>
+            )}
           </button>
           {isAuthenticated ? (
             <div className="hidden items-center gap-2 md:flex">

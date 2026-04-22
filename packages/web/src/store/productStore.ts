@@ -6,9 +6,13 @@ export interface Product {
   description: string
   price: number
   image: string
+  images?: string[]
   category: string
   stock: number
   vendorId: string
+  vendorName?: string
+  colors?: string[]
+  sizes?: string[]
   createdAt: string
   updatedAt: string
 }
