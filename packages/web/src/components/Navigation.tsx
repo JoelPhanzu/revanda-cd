@@ -57,6 +57,7 @@ export function Navigation() {
             type="button"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm"
             aria-label="Cart"
+            onClick={() => navigate('/cart')}
           >
             Cart ({itemCount})
           </button>

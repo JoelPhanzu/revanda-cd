@@ -109,6 +109,8 @@ model Product {
   validationStatus  ProductStatus @default(PENDING_APPROVAL)
   isPublished       Boolean       @default(false)
   stock             Int           @default(0)
+  colors            String[]      @default([])
+  sizes             String[]      @default([])
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

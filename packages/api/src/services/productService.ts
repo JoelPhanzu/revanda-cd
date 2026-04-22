@@ -32,6 +32,8 @@ export const productService = {
         description: payload.description,
         price: payload.price,
         stock: payload.stock,
+        colors: payload.colors || [],
+        sizes: payload.sizes || [],
       },
     });
   },
@@ -87,9 +89,36 @@ export const productService = {
     return prisma.product.findMany({
       where,
       orderBy: filters.sortBy === 'arrival' ? { createdAt: 'desc' } : undefined,
+      include: {
+        vendor: {
+          select: {
+            companyName: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
+      },
     });
   },
-  getById: async (id: string) => prisma.product.findUnique({ where: { id } }),
+  getById: async (id: string) =>
+    prisma.product.findUnique({
+      where: { id },
+      include: {
+        vendor: {
+          select: {
+            companyName: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
+      },
+    }),
   search: async (query: string) => {
     return prisma.product.findMany({
       where: {
@@ -100,6 +129,18 @@ export const productService = {
         ],
       },
       orderBy: { createdAt: 'desc' },
+      include: {
+        vendor: {
+          select: {
+            companyName: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        },
+      },
     });
   },
 };

@@ -36,6 +36,8 @@ export interface ProductInput {
   price: number;
   categoryId: string;
   stock: number;
+  colors?: string[];
+  sizes?: string[];
 }
 
 export interface ProductFilters {

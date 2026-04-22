@@ -19,7 +19,23 @@ type Product = {
   updatedAt: string
   rating?: number
   reviewsCount?: number
+  vendorName?: string
+  vendor?: {
+    companyName?: string
+    user?: {
+      fullName?: string
+    }
+  }
 }
+
+const PRODUCTS_PER_PAGE = 40
+
+const normalizeProduct = (product: Product): Product => ({
+  ...product,
+  image: product.image || '/images/placeholder-product.svg',
+  category: product.category || (product as any).categoryId || 'General',
+  vendorName: product.vendorName || product.vendor?.companyName || product.vendor?.user?.fullName,
+})
 
 const fallbackProducts: Product[] = [
   {
@@ -72,6 +88,7 @@ export function ProductsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [category, setCategory] = useState(searchParams.get('category') || 'all')
+  const [vendor, setVendor] = useState(searchParams.get('vendor') || 'all')
   const [priceRange, setPriceRange] = useState('all')
   const [rating, setRating] = useState('all')
   const [sortBy, setSortBy] = useState<'price' | 'name' | 'rating'>('price')
@@ -84,7 +101,7 @@ export function ProductsPage() {
       try {
         const response = await api.get('/products')
         const productList = Array.isArray(response.data) ? response.data : response.data?.data || []
-        setProducts(productList)
+        setProducts((productList as Product[]).map(normalizeProduct))
       } catch {
         setProducts(fallbackProducts)
       } finally {
@@ -103,8 +120,11 @@ export function ProductsPage() {
     if (category !== 'all') {
       next.set('category', category)
     }
+    if (vendor !== 'all') {
+      next.set('vendor', vendor)
+    }
     setSearchParams(next, { replace: true })
-  }, [category, searchTerm, setSearchParams])
+  }, [category, searchTerm, setSearchParams, vendor])
 
   const filteredProducts = useMemo(() => {
     const [minPrice, maxPrice] =
@@ -116,9 +136,10 @@ export function ProductsPage() {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesCategory = category === 'all' || product.category === category
+      const matchesVendor = vendor === 'all' || product.vendorId === vendor
       const matchesPrice = product.price >= minPrice && product.price <= maxPrice
       const matchesRating = rating === 'all' || (product.rating || 0) >= Number(rating)
-      return matchesSearch && matchesCategory && matchesPrice && matchesRating
+      return matchesSearch && matchesCategory && matchesVendor && matchesPrice && matchesRating
     })
 
     return [...list].sort((a, b) => {
@@ -130,10 +151,10 @@ export function ProductsPage() {
       }
       return a.price - b.price
     })
-  }, [category, priceRange, products, rating, searchTerm, sortBy])
+  }, [category, priceRange, products, rating, searchTerm, sortBy, vendor])
 
-  const paginatedProducts = filteredProducts.slice((page - 1) * 6, page * 6)
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / 6))
+  const paginatedProducts = filteredProducts.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE)
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE))
 
   return (
     <div className="space-y-6">
@@ -146,7 +167,7 @@ export function ProductsPage() {
         <LoadingSpinner message="Loading products..." />
       ) : (
         <>
-          <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-5">
+          <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-6">
             <div className="md:col-span-2">
               <Input
                 label="Search"
@@ -191,6 +212,26 @@ export function ProductsPage() {
               </select>
             </div>
             <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Vendor</label>
+              <select
+                value={vendor}
+                onChange={(event) => {
+                  setVendor(event.target.value)
+                  setPage(1)
+                }}
+                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+              >
+                <option value="all">All</option>
+                {[...new Set(products.map((product) => product.vendorId))]
+                  .filter(Boolean)
+                  .map((item) => (
+                    <option key={item} value={item}>
+                      {products.find((product) => product.vendorId === item)?.vendorName || item}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Rating</label>
               <select
                 value={rating}
@@ -221,7 +262,7 @@ export function ProductsPage() {
               No products found.
             </p>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {paginatedProducts.map((product) => (
                 <ProductCard
                   key={product.id}

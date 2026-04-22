@@ -6,6 +6,7 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ProductsPage } from '@/pages/ProductsPage'
 import { ProductDetailPage } from '@/pages/ProductDetailPage'
+import { CartPage } from '@/pages/CartPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage'
@@ -33,11 +34,22 @@ export const routes: RouteObject[] = [
       { path: 'register', element: <RegisterPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'products/:id', element: <ProductDetailPage /> },
+      { path: 'cart', element: <CartPage /> },
       {
         path: 'dashboard',
         element: (
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'checkout',
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingSpinner message="Loading checkout..." />}>
+              <CheckoutPage />
+            </Suspense>
           </ProtectedRoute>
         ),
       },

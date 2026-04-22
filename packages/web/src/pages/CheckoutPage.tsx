@@ -1,101 +1,177 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { StripeCheckout } from '@/components/StripeCheckout'
-import { apiClient } from '@/services/api'
-import { useAuthStore } from '@/store/authStore'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '@/components/Button'
+import { useCartStore } from '@/store/cartStore'
+import { useUIStore } from '@/store/uiStore'
+import { stripeService } from '@/services/stripe'
+import { formatPrice } from '@/utils/formatters'
 
-type CheckoutOrder = {
-  id: string
-  totalAmount: number
-  items?: Array<unknown>
+const TAX_RATE = 0.08
+const SHIPPING_FEE = 12
+
+type ShippingForm = {
+  fullName: string
+  address: string
+  city: string
+  country: string
 }
 
-type CheckoutOrderResponse = CheckoutOrder & {
-  totalAmount: number | string
-}
-
-export const CheckoutPage = () => {
-  const { orderId } = useParams<{ orderId: string }>()
+export function CheckoutPage() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
-  const [order, setOrder] = useState<CheckoutOrder | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { addNotification } = useUIStore()
+  const { items, subtotal, clearCart } = useCartStore()
+  const [form, setForm] = useState<ShippingForm>({
+    fullName: '',
+    address: '',
+    city: '',
+    country: '',
+  })
+  const [stripeReady, setStripeReady] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login')
+    const checkStripe = async () => {
+      const stripe = await stripeService.getStripe()
+      setStripeReady(Boolean(stripe))
+    }
+    void checkStripe()
+  }, [])
+
+  const { taxes, shipping, total } = useMemo(() => {
+    const taxesValue = subtotal * TAX_RATE
+    const shippingValue = items.length > 0 ? SHIPPING_FEE : 0
+    return {
+      taxes: taxesValue,
+      shipping: shippingValue,
+      total: subtotal + taxesValue + shippingValue,
+    }
+  }, [items.length, subtotal])
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    if (items.length === 0) {
+      addNotification({ type: 'error', message: 'Votre panier est vide.', duration: 2500 })
+      return
+    }
+    if (!form.fullName || !form.address || !form.city || !form.country) {
+      addNotification({ type: 'error', message: 'Veuillez compléter l’adresse de livraison.', duration: 3000 })
       return
     }
 
-    if (!orderId) {
-      setError('Order not found')
+    setLoading(true)
+    setTimeout(() => {
+      clearCart()
+      addNotification({ type: 'success', message: 'Commande passée avec succès.', duration: 3000 })
+      navigate('/dashboard')
       setLoading(false)
-      return
-    }
-
-    const fetchOrder = async () => {
-      try {
-        const response = await apiClient.get<CheckoutOrderResponse>(`/orders/${orderId}`)
-        const data = ((response as { data?: CheckoutOrderResponse }).data ?? response) as CheckoutOrderResponse
-        const totalAmount = Number(data.totalAmount)
-        if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
-          throw new Error('Invalid order amount')
-        }
-        setOrder({ ...data, totalAmount })
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load order'
-        setError(message)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOrder()
-  }, [isAuthenticated, navigate, orderId])
-
-  if (loading) {
-    return <div>Loading...</div>
+    }, 600)
   }
 
-  if (error) {
-    return <div className="text-red-600">{error}</div>
-  }
-
-  if (!order) {
-    return <div>Order not found</div>
-  }
-
-  const handlePaymentSuccess = () => {
-    navigate('/dashboard')
-  }
-
-  const handlePaymentError = (message: string) => {
-    setError(message)
+  if (items.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+        <p className="text-sm text-slate-600">Votre panier est vide. Ajoutez des articles pour continuer.</p>
+        <Button className="mt-4" onClick={() => navigate('/products')}>
+          Voir les produits
+        </Button>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-slate-900">Checkout</h1>
+      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+        <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
+          <section>
+            <h2 className="text-lg font-semibold text-slate-900">Adresse de livraison</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {[
+                { key: 'fullName', label: 'Nom complet' },
+                { key: 'city', label: 'Ville' },
+                { key: 'address', label: 'Adresse', className: 'sm:col-span-2' },
+                { key: 'country', label: 'Pays', className: 'sm:col-span-2' },
+              ].map((field) => (
+                <div key={field.key} className={field.className}>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">{field.label}</label>
+                  <input
+                    value={form[field.key as keyof ShippingForm]}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        [field.key]: event.target.value,
+                      }))
+                    }
+                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Order ID:</span> {order.id}
+          <section className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <h2 className="text-lg font-semibold text-slate-900">Paiement</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {stripeReady
+                ? 'Stripe est prêt pour traiter votre paiement.'
+                : 'Clé Stripe non configurée. Le paiement réel sera activé après configuration.'}
             </p>
-            <p>
-              <span className="font-medium">Items:</span> {order.items?.length || 0}
-            </p>
-            <p className="text-lg font-bold">
-              <span className="font-medium">Total:</span> ${order.totalAmount.toFixed(2)}
-            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <input
+                placeholder="Nom sur la carte"
+                className="h-11 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+              <input
+                placeholder="**** **** **** ****"
+                className="h-11 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+          </section>
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Validation...' : 'Passer la commande'}
+          </Button>
+        </form>
+
+        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-lg font-semibold text-slate-900">Résumé commande</h2>
+          <ul className="mt-4 space-y-3">
+            {items.map((item) => (
+              <li key={item.lineId || item.id} className="flex items-start justify-between gap-3 text-sm">
+                <div>
+                  <p className="font-medium text-slate-900">{item.name}</p>
+                  <p className="text-slate-500">
+                    Qté: {item.quantity}
+                    {item.selectedColor ? ` · ${item.selectedColor}` : ''}
+                    {item.selectedSize ? ` · ${item.selectedSize}` : ''}
+                  </p>
+                </div>
+                <span className="font-medium text-slate-800">{formatPrice(item.price * item.quantity)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 space-y-2 border-t border-slate-200 pt-4 text-sm text-slate-600">
+            <div className="flex items-center justify-between">
+              <span>Sous-total</span>
+              <span>{formatPrice(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Taxes</span>
+              <span>{formatPrice(taxes)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Livraison</span>
+              <span>{formatPrice(shipping)}</span>
+            </div>
+            <div className="flex items-center justify-between text-base font-semibold text-slate-900">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
           </div>
-        </div>
-
-        <StripeCheckout orderId={order.id} amount={order.totalAmount} onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+        </aside>
       </div>
     </div>
   )
 }
+
+export default CheckoutPage

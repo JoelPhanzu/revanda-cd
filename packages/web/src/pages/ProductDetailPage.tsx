@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
 import { ProductCard } from '@/components/ProductCard'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/Button'
@@ -21,7 +26,24 @@ type Product = {
   updatedAt: string
   rating?: number
   reviewsCount?: number
+  images?: string[]
+  colors?: string[]
+  sizes?: string[]
+  vendor?: {
+    companyName?: string
+    user?: {
+      fullName?: string
+    }
+  }
+  vendorName?: string
 }
+
+const normalizeProduct = (product: Product): Product => ({
+  ...product,
+  image: product.image || '/images/placeholder-product.svg',
+  category: product.category || (product as any).categoryId || 'General',
+  vendorName: product.vendorName || product.vendor?.companyName || product.vendor?.user?.fullName,
+})
 
 const fallbackProduct: Product = {
   id: 'fallback',
@@ -36,6 +58,14 @@ const fallbackProduct: Product = {
   updatedAt: '2026-04-10',
   rating: 4.7,
   reviewsCount: 64,
+  images: [
+    '/images/placeholder-product.svg',
+    '/images/placeholder-product.svg',
+    '/images/placeholder-product.svg',
+  ],
+  colors: ['Noir', 'Blanc'],
+  sizes: ['S', 'M', 'L'],
+  vendorName: 'Revanda Industrial Supply',
 }
 
 export function ProductDetailPage() {
@@ -43,6 +73,10 @@ export function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [related, setRelated] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedColor, setSelectedColor] = useState('')
+  const [selectedSize, setSelectedSize] = useState('')
+  const [quantity, setQuantity] = useState(1)
+  const [selectionError, setSelectionError] = useState('')
   const { addItem } = useCartStore()
   const { toggleWishlist } = useUserStore()
 
@@ -55,10 +89,17 @@ export function ProductDetailPage() {
           api.get('/products'),
         ])
 
-        const selected = (productResponse.data?.data || productResponse.data || fallbackProduct) as Product
-        const allProducts = (productsResponse.data?.data || productsResponse.data || []) as Product[]
+        const selected = normalizeProduct(
+          (productResponse.data?.data || productResponse.data || fallbackProduct) as Product
+        )
+        const allProducts = ((productsResponse.data?.data || productsResponse.data || []) as Product[]).map(
+          normalizeProduct
+        )
         setProduct(selected)
         setRelated(allProducts.filter((item) => item.id !== selected.id).slice(0, 4))
+        setSelectedColor(selected.colors?.[0] || '')
+        setSelectedSize(selected.sizes?.[0] || '')
+        setQuantity(1)
       } catch {
         setProduct({ ...fallbackProduct, id: id || fallbackProduct.id })
         setRelated([
@@ -66,6 +107,9 @@ export function ProductDetailPage() {
           { ...fallbackProduct, id: 'related-1', name: 'Hydraulic Kit', price: 320 },
           { ...fallbackProduct, id: 'related-2', name: 'Power Drill Z4', price: 499 },
         ])
+        setSelectedColor(fallbackProduct.colors?.[0] || '')
+        setSelectedSize(fallbackProduct.sizes?.[0] || '')
+        setQuantity(1)
       } finally {
         setLoading(false)
       }
@@ -82,21 +126,53 @@ export function ProductDetailPage() {
     return <p className="rounded-xl bg-white p-6 text-sm text-slate-600">Product not found.</p>
   }
 
+  const productImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image, product.image, product.image].filter(Boolean)
+  const availableColors = product.colors || []
+  const availableSizes = product.sizes || []
+  const vendorLabel =
+    product.vendor?.companyName || product.vendorName || product.vendor?.user?.fullName || product.vendorId
+
+  const handleAddToCart = () => {
+    if (availableColors.length > 0 && !selectedColor) {
+      setSelectionError('Veuillez sélectionner une couleur.')
+      return
+    }
+    if (availableSizes.length > 0 && !selectedSize) {
+      setSelectionError('Veuillez sélectionner une taille.')
+      return
+    }
+    setSelectionError('')
+    addItem({
+      id: product.id,
+      name: product.name,
+      image: product.image || productImages[0] || '/images/placeholder-product.svg',
+      price: product.price,
+      stock: product.stock,
+      quantity,
+      selectedColor,
+      selectedSize,
+    })
+  }
+
   return (
     <div className="space-y-8">
       <section className="grid gap-8 rounded-2xl border border-slate-200 bg-white p-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <img src={product.image} alt={product.name} className="aspect-square w-full rounded-xl object-cover" />
-          <div className="grid grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((item) => (
-              <img
-                key={item}
-                src={product.image}
-                alt={`${product.name} thumbnail ${item}`}
-                className="aspect-square rounded-lg object-cover"
-              />
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            className="overflow-hidden rounded-xl"
+          >
+            {productImages.map((image, index) => (
+              <SwiperSlide key={`${image}-${index}`}>
+                <img src={image} alt={`${product.name} ${index + 1}`} className="aspect-square w-full object-cover" />
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         </div>
         <div className="space-y-5">
           <h1 className="text-3xl font-bold text-slate-900">{product.name}</h1>
@@ -107,22 +183,66 @@ export function ProductDetailPage() {
           <p className="text-sm text-slate-700">{product.description}</p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li>Category: {product.category}</li>
-            <li>Vendor: {product.vendorId}</li>
+            <li>Vendor: {vendorLabel}</li>
             <li>Stock: {product.stock > 0 ? `${product.stock} available` : 'Out of stock'}</li>
           </ul>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Couleur</label>
+              <select
+                value={selectedColor}
+                onChange={(event) => setSelectedColor(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                disabled={availableColors.length === 0}
+              >
+                {availableColors.length === 0 ? (
+                  <option value="">Non disponible</option>
+                ) : (
+                  availableColors.map((color) => (
+                    <option key={color} value={color}>
+                      {color}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Taille</label>
+              <select
+                value={selectedSize}
+                onChange={(event) => setSelectedSize(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                disabled={availableSizes.length === 0}
+              >
+                {availableSizes.length === 0 ? (
+                  <option value="">Non disponible</option>
+                ) : (
+                  availableSizes.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Quantité</label>
+              <select
+                value={quantity}
+                onChange={(event) => setQuantity(Number(event.target.value))}
+                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+              >
+                {Array.from({ length: Math.max(product.stock, 1) }, (_, index) => index + 1).map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {selectionError ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{selectionError}</p> : null}
           <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={() =>
-                addItem({
-                  id: product.id,
-                  name: product.name,
-                  image: product.image,
-                  price: product.price,
-                  stock: product.stock,
-                })
-              }
-              disabled={product.stock <= 0}
-            >
+            <Button onClick={handleAddToCart} disabled={product.stock <= 0}>
               Add to Cart
             </Button>
             <Button
@@ -153,6 +273,26 @@ export function ProductDetailPage() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="text-2xl font-bold text-slate-900">Customer reviews</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-100 p-4">
+            <p className="text-3xl font-bold text-slate-900">{product.rating?.toFixed(1) || '4.7'}</p>
+            <p className="text-sm text-slate-600">{'★'.repeat(5)}</p>
+            <p className="mt-1 text-xs text-slate-500">{product.reviewsCount || 0} avis clients</p>
+          </div>
+          <div className="space-y-2 rounded-xl border border-slate-100 p-4 md:col-span-2">
+            {[5, 4, 3].map((star) => (
+              <div key={star} className="flex items-center gap-3">
+                <span className="w-12 text-sm text-slate-600">{star}★</span>
+                <div className="h-2 flex-1 rounded-full bg-slate-100">
+                  <div
+                    className="h-2 rounded-full bg-indigo-500"
+                    style={{ width: `${star === 5 ? 72 : star === 4 ? 20 : 8}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="mt-4 space-y-4">
           {[
             { author: 'A. Moreau', rating: 5, text: 'Great quality and fast shipping.' },
