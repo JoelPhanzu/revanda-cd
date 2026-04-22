@@ -179,7 +179,7 @@ export function ProductDetailPage() {
             className="overflow-hidden rounded-2xl"
           >
             {productImages.map((image, index) => (
-              <SwiperSlide key={`${image}-${index}`}>
+              <SwiperSlide key={index}>
                 <img src={image} alt={`${product.name} ${index + 1}`} className="aspect-square w-full object-cover" />
               </SwiperSlide>
             ))}

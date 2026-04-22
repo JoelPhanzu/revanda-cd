@@ -56,6 +56,7 @@ export function CheckoutPage() {
     }
 
     setLoading(true)
+    // TODO: Replace with real order creation + Stripe payment processing before production.
     setTimeout(() => {
       clearCart()
       addNotification({ type: 'success', message: 'Commande passée avec succès.', duration: 3000 })
@@ -159,6 +160,7 @@ export function CheckoutPage() {
               </h2>
             </div>
             <div className="p-6">
+              {/* TODO: Replace with real Stripe payment processing before production */}
               {stripeReady ? (
                 <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
                   ✓ Stripe est prêt pour traiter votre paiement.
