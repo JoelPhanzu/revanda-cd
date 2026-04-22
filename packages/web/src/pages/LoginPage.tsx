@@ -132,9 +132,9 @@ export function LoginPage() {
             <Link to="/register" className="text-indigo-600 hover:text-indigo-700">
               Créer un compte
             </Link>
-            <a href="#" className="text-slate-500 hover:text-slate-700">
+            <Link to="/contact" className="text-slate-500 hover:text-slate-700">
               Mot de passe oublié ?
-            </a>
+            </Link>
           </div>
 
           {formError ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{formError}</p> : null}
