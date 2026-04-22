@@ -5,9 +5,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
 import { stripeService } from '@/services/stripe'
 import { formatPrice } from '@/utils/formatters'
-
-const TAX_RATE = 0.08
-const SHIPPING_FEE = 12
+import { SHIPPING_FEE, TAX_RATE } from '@/constants/checkout'
 
 type ShippingForm = {
   fullName: string

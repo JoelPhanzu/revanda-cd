@@ -2,9 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { useCartStore } from '@/store/cartStore'
 import { formatPrice } from '@/utils/formatters'
-
-const TAX_RATE = 0.08
-const SHIPPING_FEE = 12
+import { SHIPPING_FEE, TAX_RATE } from '@/constants/checkout'
 const getLineId = (item: {
   lineId?: string
   id: string

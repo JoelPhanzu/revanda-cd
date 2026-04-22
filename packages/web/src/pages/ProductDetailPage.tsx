@@ -227,17 +227,23 @@ export function ProductDetailPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Quantité</label>
-              <select
-                value={quantity}
-                onChange={(event) => setQuantity(Number(event.target.value))}
-                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
-              >
-                {Array.from({ length: Math.max(product.stock, 1) }, (_, index) => index + 1).map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
+              {product.stock > 0 ? (
+                <select
+                  value={quantity}
+                  onChange={(event) => setQuantity(Number(event.target.value))}
+                  className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                >
+                  {Array.from({ length: product.stock }, (_, index) => index + 1).map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                  Indisponible
+                </p>
+              )}
             </div>
           </div>
           {selectionError ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{selectionError}</p> : null}
