@@ -7,6 +7,7 @@ import vendorRoutes from './vendor';
 import messageRoutes from './messages';
 import reviewRoutes from './reviews';
 import adminRoutes from './admin';
+import kycRoutes from './kycRoutes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/vendor', vendorRoutes);
 router.use('/messages', messageRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/admin', adminRoutes);
+router.use('/kyc', kycRoutes);
 
 export default router;
