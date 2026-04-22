@@ -64,6 +64,7 @@ export const orderController = {
 
       const canUpdate =
         req.user.role === 'ADMIN' ||
+        req.user.role === 'SUPER_ADMIN' ||
         (req.user.role === 'VENDOR' && (await orderService.hasVendorInOrder(req.params.id, req.user.userId)));
 
       if (!canUpdate) {

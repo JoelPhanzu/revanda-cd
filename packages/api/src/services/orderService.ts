@@ -120,7 +120,7 @@ export const orderService = {
     return count > 0;
   },
   canViewOrder: async (orderId: string, userId: string, role: Role): Promise<boolean> => {
-    if (role === 'ADMIN') {
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
       return true;
     }
 
