@@ -49,6 +49,34 @@ enum MessageSender {
   VENDOR
 }
 
+enum KYCStatus {
+  PENDING
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum DocumentType {
+  RCCM
+  ID_NATIONAL
+  TAX_NUMBER_CERT
+  PROOF_ADDRESS
+  COMPANY_PRESENTATION
+  LEGAL_REP_ID
+  LEGAL_REP_PHOTO
+  LEGAL_REP_MANDATE
+  BANK_CERTIFICATE
+  COMMERCIAL_REGISTRATION
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -83,6 +111,80 @@ model Vendor {
   vendorStats  VendorStats?
   messages     Message[]     @relation("VendorMessages")
   reviews      Review[]
+  kycProfile   VendorKYC?
+}
+
+model VendorKYC {
+  id                  String    @id @default(cuid())
+  vendorId            String    @unique
+  companyName         String
+  rccmNumber          String
+  taxNumber           String
+  companyAddress      String
+  businessPhone       String
+  businessEmail       String
+  bankAccountHolder   String
+  bankAccountNumber   String
+  bankCode            String
+  status              KYCStatus @default(PENDING)
+  submittedAt         DateTime?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  expiresAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  vendor              Vendor                   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  documents           KYCDocument[]
+  legalRepresentative KYCLegalRepresentative?
+  verifications       KYCVerification[]
+}
+
+model KYCDocument {
+  id                 String             @id @default(cuid())
+  kycId              String
+  type               DocumentType
+  fileUrl            String
+  fileName           String
+  fileSize           Int
+  mimeType           String
+  uploadedAt         DateTime           @default(now())
+  expiresAt          DateTime?
+  verificationStatus VerificationStatus @default(PENDING)
+
+  kyc VendorKYC @relation(fields: [kycId], references: [id], onDelete: Cascade)
+
+  @@unique([kycId, type])
+}
+
+model KYCLegalRepresentative {
+  id                String   @id @default(cuid())
+  kycId             String   @unique
+  fullName          String
+  position          String
+  phone             String
+  email             String
+  address           String
+  nationalIdNumber  String
+  photoUrl          String?
+  idDocumentUrl     String?
+  mandateDocumentUrl String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  kyc VendorKYC @relation(fields: [kycId], references: [id], onDelete: Cascade)
+}
+
+model KYCVerification {
+  id         String             @id @default(cuid())
+  kycId      String
+  status     VerificationStatus
+  notes      String?
+  verifiedBy String?
+  verifiedAt DateTime?
+  createdAt  DateTime           @default(now())
+
+  kyc VendorKYC @relation(fields: [kycId], references: [id], onDelete: Cascade)
 }
 
 model Category {

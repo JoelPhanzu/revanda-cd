@@ -53,3 +53,5 @@ export interface OrderItemInput {
   quantity: number;
   unitPrice: number;
 }
+
+export * from './kyc';
