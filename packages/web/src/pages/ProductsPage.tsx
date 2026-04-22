@@ -158,109 +158,141 @@ export function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Products</h1>
-        <p className="mt-1 text-sm text-slate-600">Browse, filter, and sort items for your needs.</p>
-      </div>
+      {/* Page header — gradient strip like homepage */}
+      <section className="rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 px-8 py-7 text-white">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="mb-1 inline-block rounded-full bg-white/20 px-3 py-0.5 text-xs font-semibold tracking-wide">
+              Catalogue
+            </p>
+            <h1 className="text-3xl font-black">Produits</h1>
+            <p className="mt-1 text-sm text-indigo-100">
+              {filteredProducts.length} résultat{filteredProducts.length !== 1 ? 's' : ''} · filtrez, triez et commandez rapidement.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setCategory('all')
+              setVendor('all')
+              setPriceRange('all')
+              setRating('all')
+              setSearchTerm('')
+              setPage(1)
+            }}
+            className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium transition hover:bg-white/10"
+          >
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </section>
 
       {isLoading ? (
-        <LoadingSpinner message="Loading products..." />
+        <LoadingSpinner message="Chargement des produits..." />
       ) : (
         <>
-          <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-6">
-            <div className="md:col-span-2">
-              <Input
-                label="Search"
-                placeholder="Search by name or description"
-                value={searchTerm}
-                onChange={(event) => {
-                  setSearchTerm(event.target.value)
-                  setPage(1)
-                }}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Category</label>
-              <select
-                value={category}
-                onChange={(event) => {
-                  setCategory(event.target.value)
-                  setPage(1)
-                }}
-                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
-              >
-                <option value="all">All</option>
-                {[...new Set(products.map((product) => product.category))].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Price</label>
-              <select
-                value={priceRange}
-                onChange={(event) => setPriceRange(event.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
-              >
-                <option value="all">All</option>
-                <option value="0-50">$0 - $50</option>
-                <option value="50-250">$50 - $250</option>
-                <option value="250-1000">$250 - $1,000</option>
-                <option value="1000-5000">$1,000 - $5,000</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Vendor</label>
-              <select
-                value={vendor}
-                onChange={(event) => {
-                  setVendor(event.target.value)
-                  setPage(1)
-                }}
-                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
-              >
-                <option value="all">All</option>
-                {[...new Set(products.map((product) => product.vendorId))]
-                  .filter(Boolean)
-                  .map((item) => (
+          {/* Filter bar */}
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Filtres</p>
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+              <div className="lg:col-span-2">
+                <Input
+                  label="Recherche"
+                  placeholder="Nom, description..."
+                  value={searchTerm}
+                  onChange={(event) => {
+                    setSearchTerm(event.target.value)
+                    setPage(1)
+                  }}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Catégorie</label>
+                <select
+                  value={category}
+                  onChange={(event) => {
+                    setCategory(event.target.value)
+                    setPage(1)
+                  }}
+                  className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="all">Toutes</option>
+                  {[...new Set(products.map((product) => product.category))].map((item) => (
                     <option key={item} value={item}>
-                      {products.find((product) => product.vendorId === item)?.vendorName || item}
+                      {item}
                     </option>
                   ))}
-              </select>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Prix</label>
+                <select
+                  value={priceRange}
+                  onChange={(event) => setPriceRange(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="all">Tous</option>
+                  <option value="0-50">$0 – $50</option>
+                  <option value="50-250">$50 – $250</option>
+                  <option value="250-1000">$250 – $1 000</option>
+                  <option value="1000-5000">$1 000 – $5 000</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Vendeur</label>
+                <select
+                  value={vendor}
+                  onChange={(event) => {
+                    setVendor(event.target.value)
+                    setPage(1)
+                  }}
+                  className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="all">Tous</option>
+                  {[...new Set(products.map((product) => product.vendorId))]
+                    .filter(Boolean)
+                    .map((item) => (
+                      <option key={item} value={item}>
+                        {products.find((product) => product.vendorId === item)?.vendorName || item}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Note min.</label>
+                <select
+                  value={rating}
+                  onChange={(event) => setRating(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="all">Toutes</option>
+                  <option value="4">4★ et +</option>
+                  <option value="4.5">4.5★ et +</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Rating</label>
-              <select
-                value={rating}
-                onChange={(event) => setRating(event.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
-              >
-                <option value="all">All</option>
-                <option value="4">4★ and up</option>
-                <option value="4.5">4.5★ and up</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Sort by</label>
-              <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value as 'price' | 'name' | 'rating')}
-                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
-              >
-                <option value="price">Price</option>
-                <option value="name">Name</option>
-                <option value="rating">Rating</option>
-              </select>
+            {/* Sort strip */}
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
+              <span className="font-medium text-slate-700">Trier par :</span>
+              {(['price', 'name', 'rating'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSortBy(option)}
+                  className={`rounded-full px-3 py-1 font-medium transition ${sortBy === option ? 'bg-indigo-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                >
+                  {option === 'price' ? 'Prix' : option === 'name' ? 'Nom' : 'Note'}
+                </button>
+              ))}
             </div>
           </section>
 
           {paginatedProducts.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
-              No products found.
-            </p>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+              <p className="text-4xl">🔍</p>
+              <p className="mt-3 text-base font-semibold text-slate-700">Aucun produit trouvé</p>
+              <p className="mt-1 text-sm text-slate-500">Essayez d'ajuster vos filtres ou votre recherche.</p>
+            </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {paginatedProducts.map((product) => (
@@ -281,25 +313,27 @@ export function ProductsPage() {
             </div>
           )}
 
+          {/* Pagination */}
           <div className="flex items-center justify-center gap-3">
             <button
               type="button"
               onClick={() => setPage((value) => Math.max(1, value - 1))}
               disabled={page <= 1}
-              className="h-9 rounded-lg border border-slate-300 px-4 text-sm disabled:opacity-50"
+              className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-40"
             >
-              Previous
+              ← Précédent
             </button>
-            <p className="text-sm text-slate-600">
-              Page {page} / {totalPages}
-            </p>
+            <span className="rounded-lg bg-indigo-600 px-3 py-1 text-sm font-semibold text-white">
+              {page}
+            </span>
+            <span className="text-sm text-slate-500">/ {totalPages}</span>
             <button
               type="button"
               onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
               disabled={page >= totalPages}
-              className="h-9 rounded-lg border border-slate-300 px-4 text-sm disabled:opacity-50"
+              className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-40"
             >
-              Next
+              Suivant →
             </button>
           </div>
         </>
