@@ -99,7 +99,7 @@ export const paymentController = {
       const isOwner = relatedPayment.order.customerId === req.user.userId;
       const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.userId } });
       const isVendor = vendor?.id === relatedPayment.vendorId;
-      const isAdmin = req.user.role === 'ADMIN';
+      const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
 
       if (!isOwner && !isVendor && !isAdmin) {
         res.status(403).json({ message: 'Forbidden' });

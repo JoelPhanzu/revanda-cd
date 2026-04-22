@@ -53,15 +53,6 @@ export const productService = {
       },
     });
   },
-  delete: async (vendorUserId: string, productId: string): Promise<void> => {
-    const vendorId = await getVendorIdByUserId(vendorUserId);
-    const existing = await prisma.product.findFirst({ where: { id: productId, vendorId } });
-    if (!existing) {
-      throw new Error('Product not found');
-    }
-
-    await prisma.product.delete({ where: { id: productId } });
-  },
   getMyProducts: async (vendorUserId: string) => {
     const vendorId = await getVendorIdByUserId(vendorUserId);
     return prisma.product.findMany({ where: { vendorId }, orderBy: { createdAt: 'desc' } });
