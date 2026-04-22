@@ -40,7 +40,7 @@ export const kycController = {
 
       const kyc = await kycService.getVendorKYC(req.user.userId);
       if (!kyc) {
-        res.status(200).json({ status: 'PENDING', kyc: null });
+        res.status(200).json({ status: 'NOT_SUBMITTED', kyc: null });
         return;
       }
 
@@ -98,12 +98,12 @@ export const kycController = {
       }
 
       const { kycId } = req.params;
-      const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
       if (!kycId) {
         res.status(400).json({ message: 'Missing kyc id' });
         return;
       }
 
+      const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
       if (!reason) {
         res.status(400).json({ message: 'Missing rejection reason' });
         return;

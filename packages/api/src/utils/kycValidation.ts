@@ -9,7 +9,29 @@ export const validateRCCMFormat = (value: string): boolean => /^[A-Z]{2}\/\d{4}\
 
 export const validateTaxNumberFormat = (value: string): boolean => /^[A-Z0-9]{6,20}$/i.test(value.trim());
 
-export const validateEmailFormat = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+export const validateEmailFormat = (value: string): boolean => {
+  const email = value.trim();
+  if (!email || email.includes(' ')) {
+    return false;
+  }
+
+  const parts = email.split('@');
+  if (parts.length !== 2) {
+    return false;
+  }
+
+  const [localPart, domainPart] = parts;
+  if (!localPart || !domainPart || domainPart.startsWith('.') || domainPart.endsWith('.')) {
+    return false;
+  }
+
+  const domainLabels = domainPart.split('.');
+  if (domainLabels.length < 2) {
+    return false;
+  }
+
+  return domainLabels.every((label) => /^[A-Za-z0-9-]+$/.test(label) && !label.startsWith('-') && !label.endsWith('-'));
+};
 
 export const validatePhoneNumberFormat = (value: string): boolean => /^\+?[1-9]\d{7,14}$/.test(value.trim());
 

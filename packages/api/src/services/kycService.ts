@@ -67,7 +67,7 @@ export const kycService = {
 
     const kyc = await prisma.$transaction(async (tx) => {
       const currentDate = new Date();
-      const createdOrUpdated = await tx.vendorKYC.upsert({
+      const createdOrUpdated = await tx.vendorKyc.upsert({
         where: { vendorId },
         create: {
           vendorId,
@@ -145,13 +145,11 @@ export const kycService = {
         },
       });
 
-      await tx.kYCVerification.create({
+      await tx.kycVerification.create({
         data: {
           kycId: createdOrUpdated.id,
           status: 'PENDING',
           notes: 'KYC submitted by vendor',
-          verifiedBy: vendorUserId,
-          verifiedAt: currentDate,
         },
       });
 
@@ -163,7 +161,7 @@ export const kycService = {
 
   uploadDocument: async (vendorUserId: string, document: KYCDocumentInput) => {
     const vendorId = await getVendorIdByUserId(vendorUserId);
-    const kyc = await prisma.vendorKYC.findUnique({ where: { vendorId } });
+    const kyc = await prisma.vendorKyc.findUnique({ where: { vendorId } });
 
     if (!kyc) {
       throw new AppError('KYC profile not found', 404);
@@ -174,7 +172,7 @@ export const kycService = {
       throw new AppError(documentValidationErrors.join('; '), 400);
     }
 
-    const uploadedDocument = await prisma.kYCDocument.upsert({
+    const uploadedDocument = await prisma.kycDocument.upsert({
       where: {
         kycId_type: {
           kycId: kyc.id,
@@ -204,19 +202,15 @@ export const kycService = {
     return uploadedDocument;
   },
 
-  verifyKYC: async (kycId: string, status: KYCStatus, adminUserId: string, reason?: string) => {
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-      throw new AppError('Invalid KYC verification status. Allowed: APPROVED or REJECTED', 400);
-    }
-
-    const kyc = await prisma.vendorKYC.findUnique({ where: { id: kycId } });
+  verifyKYC: async (kycId: string, status: Extract<KYCStatus, 'APPROVED' | 'REJECTED'>, adminUserId: string, reason?: string) => {
+    const kyc = await prisma.vendorKyc.findUnique({ where: { id: kycId } });
     if (!kyc) {
       throw new AppError('KYC profile not found', 404);
     }
 
     const now = new Date();
     const updatedKYC = await prisma.$transaction(async (tx) => {
-      const updated = await tx.vendorKYC.update({
+      const updated = await tx.vendorKyc.update({
         where: { id: kycId },
         data: {
           status,
@@ -250,11 +244,11 @@ export const kycService = {
         },
       });
 
-      await tx.kYCVerification.create({
+      await tx.kycVerification.create({
         data: {
           kycId,
-          status: status === 'APPROVED' ? 'APPROVED' : 'REJECTED',
-          notes: reason,
+          status,
+          notes: reason || (status === 'APPROVED' ? 'KYC approved by admin' : 'KYC rejected by admin'),
           verifiedBy: adminUserId,
           verifiedAt: now,
         },
@@ -269,7 +263,7 @@ export const kycService = {
   getVendorKYC: async (vendorUserId: string) => {
     const vendorId = await getVendorIdByUserId(vendorUserId);
 
-    return prisma.vendorKYC.findUnique({
+    return prisma.vendorKyc.findUnique({
       where: { vendorId },
       include: {
         documents: true,
@@ -282,7 +276,7 @@ export const kycService = {
   },
 
   getPendingKYCs: async () => {
-    return prisma.vendorKYC.findMany({
+    return prisma.vendorKyc.findMany({
       where: {
         status: {
           in: ['SUBMITTED', 'UNDER_REVIEW'],
@@ -310,7 +304,7 @@ export const kycService = {
   },
 
   getKYCByVendorId: async (vendorId: string) => {
-    return prisma.vendorKYC.findUnique({
+    return prisma.vendorKyc.findUnique({
       where: { vendorId },
       include: {
         vendor: {
@@ -334,7 +328,7 @@ export const kycService = {
   },
 
   addVerificationRecord: async (kycId: string, input: KYCVerificationInput) => {
-    return prisma.kYCVerification.create({
+    return prisma.kycVerification.create({
       data: {
         kycId,
         status: input.status,

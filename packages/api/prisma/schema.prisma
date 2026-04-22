@@ -111,10 +111,10 @@ model Vendor {
   vendorStats  VendorStats?
   messages     Message[]     @relation("VendorMessages")
   reviews      Review[]
-  kycProfile   VendorKYC?
+  kycProfile   VendorKyc?
 }
 
-model VendorKYC {
+model VendorKyc {
   id                  String    @id @default(cuid())
   vendorId            String    @unique
   companyName         String
@@ -134,13 +134,15 @@ model VendorKYC {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  vendor              Vendor                   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  documents           KYCDocument[]
-  legalRepresentative KYCLegalRepresentative?
-  verifications       KYCVerification[]
+  vendor              Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  documents           KycDocument[]
+  legalRepresentative KycLegalRepresentative?
+  verifications       KycVerification[]
+
+  @@map("VendorKYC")
 }
 
-model KYCDocument {
+model KycDocument {
   id                 String             @id @default(cuid())
   kycId              String
   type               DocumentType
@@ -152,12 +154,13 @@ model KYCDocument {
   expiresAt          DateTime?
   verificationStatus VerificationStatus @default(PENDING)
 
-  kyc VendorKYC @relation(fields: [kycId], references: [id], onDelete: Cascade)
+  kyc VendorKyc @relation(fields: [kycId], references: [id], onDelete: Cascade)
 
   @@unique([kycId, type])
+  @@map("KYCDocument")
 }
 
-model KYCLegalRepresentative {
+model KycLegalRepresentative {
   id                String   @id @default(cuid())
   kycId             String   @unique
   fullName          String
@@ -172,10 +175,12 @@ model KYCLegalRepresentative {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  kyc VendorKYC @relation(fields: [kycId], references: [id], onDelete: Cascade)
+  kyc VendorKyc @relation(fields: [kycId], references: [id], onDelete: Cascade)
+
+  @@map("KYCLegalRepresentative")
 }
 
-model KYCVerification {
+model KycVerification {
   id         String             @id @default(cuid())
   kycId      String
   status     VerificationStatus
@@ -184,7 +189,9 @@ model KYCVerification {
   verifiedAt DateTime?
   createdAt  DateTime           @default(now())
 
-  kyc VendorKYC @relation(fields: [kycId], references: [id], onDelete: Cascade)
+  kyc VendorKyc @relation(fields: [kycId], references: [id], onDelete: Cascade)
+
+  @@map("KYCVerification")
 }
 
 model Category {
