@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Vodacomtigo10
-      POSTGRES_DB: revandaBD
+      POSTGRES_DB: revanda
     ports:
       - "5432:5432"
     volumes:

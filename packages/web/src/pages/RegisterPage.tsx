@@ -12,7 +12,7 @@ export function RegisterPage() {
   const { addNotification } = useUIStore()
 
   const [formData, setFormData] = useState<RegisterInput>({
-    name: '',
+    fullName: '',
     email: '',
     password: '',
   })
@@ -32,7 +32,7 @@ export function RegisterPage() {
 
   const validate = () => {
     const nextErrors: Partial<Record<'name' | 'email' | 'password', string>> = {}
-    if (formData.name.trim().length < 2) {
+    if (formData.fullName.trim().length < 2) {
       nextErrors.name = 'Le nom doit contenir au moins 2 caractères.'
     }
     if (!emailRegex.test(formData.email)) {
@@ -137,17 +137,17 @@ export function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-700">
+              <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-slate-700">
                 Nom complet
               </label>
               <input
-                id="name"
+                id="fullName"
                 type="text"
-                name="name"
-                value={formData.name}
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Jean Dupont"
-                autoComplete="name"
+                autoComplete="fullName"
                 className={`h-11 w-full rounded-lg border px-3 text-sm outline-none transition focus:ring-2 ${errors.name ? 'border-red-400 bg-red-50/30 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'}`}
               />
               {errors.name ? <p className="mt-1 text-xs text-red-600">{errors.name}</p> : null}

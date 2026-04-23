@@ -6,7 +6,7 @@ export interface LoginInput {
 }
 
 export interface RegisterInput {
-  name: string
+  fullName: string
   email: string
   password: string
   phone?: string
