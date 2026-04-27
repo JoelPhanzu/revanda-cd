@@ -1,0 +1,8 @@
+node_modules
+.git
+.env.example
+.env.save
+packages/*/node_modules
+packages/*/dist
+dist
+.turbo
